@@ -1,0 +1,69 @@
+rules_version = '2';
+
+// Reglas por rol para warplux / telares.
+// NO están desplegadas todavía: la consola sigue en modo abierto a propósito
+// mientras se prueba el flujo completo. Desplegar con:
+//   firebase deploy --only firestore:rules
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function emailActual() {
+      return request.auth.token.email;
+    }
+
+    function filaUsuario() {
+      return get(/databases/$(database)/documents/usuarios_roles/$(emailActual()));
+    }
+
+    function rolActual() {
+      return request.auth != null && filaUsuario() != null ? filaUsuario().data.rol : 'visitante';
+    }
+
+    function esMaestra() {
+      return request.auth != null && rolActual() == 'maestra_tejedora';
+    }
+
+    function esTejedora() {
+      return request.auth != null && (rolActual() == 'tejedor' || esMaestra());
+    }
+
+    function esUrdidora() {
+      return request.auth != null && (rolActual() == 'urdidor' || esMaestra());
+    }
+
+    function esHiladoraDe(proyectoId, pasadaId) {
+      return request.auth != null && (
+        esTejedora() ||
+        (rolActual() == 'hilador' &&
+         filaUsuario().data.proyectosAlcance[proyectoId].pasadaId == pasadaId)
+      );
+    }
+
+    match /proyectos/{proyectoId} {
+      allow read: if true;
+      allow write: if esMaestra();
+
+      match /pasadas/{pasadaId} {
+        allow read: if true;
+        allow write: if esMaestra() || esTejedora();
+
+        match /nudos/{hiloId} {
+          // público solo ve nudos tejidos; crudo queda reservado a tejedoras/maestra
+          allow read: if resource.data.estado == 'tejido' || esTejedora();
+          allow create, update: if esTejedora() || esHiladoraDe(proyectoId, pasadaId);
+          allow delete: if esMaestra();
+        }
+      }
+
+      match /plantillas/{plantillaId} {
+        allow read: if true;
+        allow write: if esUrdidora();
+      }
+    }
+
+    match /usuarios_roles/{email} {
+      allow read: if request.auth != null && (emailActual() == email || esMaestra());
+      allow write: if esMaestra();
+    }
+  }
+}

@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Telar del Encuentro — TELARES UMAG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#f1f0ec; --cream-soft:#f8f7f3; --white:#fff;
+  --ink:#3a402f; --ink-strong:#262b1d; --ink-soft:#5c6350;
+  --gold:#e29f3e; --olive:#85751a; --terracotta:#bb6f3a; --lichen:#7a8b6a;
+  --gold-tint:#fbf0dd; --olive-tint:#eeecd6; --terracotta-tint:#f5e6db; --lichen-tint:#e7ebe2;
+  --font-display:"Poppins","Segoe UI",sans-serif;
+  --font-body:"Inter","Segoe UI",sans-serif;
+  --font-accent:"Lora",Georgia,serif;
+  --radius-s:8px; --radius-m:14px; --radius-l:24px;
+  --dur:.22s; --ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:var(--font-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.15;color:var(--ink-strong)}
+p{margin:0 0 .8em}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--terracotta);outline-offset:2px;border-radius:4px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+@media(min-width:820px){.wrap{padding:0 28px}}
+
+/* ---------- selvage / orillo ---------- */
+.selvage{height:10px;width:100%;display:block}
+
+/* ---------- header ---------- */
+header.site{padding:22px 0 14px;background:var(--cream)}
+.brandline{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.wordmark{font-family:var(--font-display);font-weight:700;letter-spacing:.22em;font-size:.92rem;color:var(--ink-strong)}
+.brandline .sep{width:26px;height:2px;background:var(--gold);display:inline-block}
+.kicker{font-family:var(--font-display);font-weight:600;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--terracotta)}
+h1{font-size:clamp(1.9rem,6.2vw,3.1rem);margin:.28em 0 .1em;letter-spacing:-.02em}
+.lede{font-family:var(--font-accent);font-size:clamp(1rem,2.6vw,1.16rem);max-width:56ch;color:var(--ink-soft);font-style:italic}
+
+/* ---------- counters ---------- */
+.counters{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 6px}
+.counter{background:var(--white);border:1px solid rgba(58,64,47,.1);border-radius:var(--radius-m);padding:9px 14px;min-width:104px}
+.counter b{display:block;font-family:var(--font-display);font-size:1.5rem;font-variant-numeric:tabular-nums;color:var(--ink-strong);line-height:1.1}
+.counter span{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+
+/* ---------- programa band ---------- */
+.programa{margin:22px 0 4px}
+.programa h2{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);font-weight:600;margin-bottom:9px}
+.prog-track{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.prog-item{flex:0 0 auto;display:flex;align-items:center;gap:9px;background:var(--white);border:1px solid rgba(58,64,47,.12);border-radius:999px;padding:7px 15px 7px 9px;color:var(--ink);white-space:nowrap;transition:transform var(--dur) var(--ease),border-color var(--dur)}
+.prog-item:hover{transform:translateY(-2px);border-color:var(--gold)}
+.prog-item.done{opacity:.72}
+.prog-dot{width:15px;height:15px;flex:0 0 auto}
+.prog-item small{color:var(--ink-soft);font-variant-numeric:tabular-nums}
+
+/* ---------- tabs + filtros ---------- */
+.toolbar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin:26px 0 10px;padding-top:18px;border-top:1px solid rgba(58,64,47,.12)}
+.tabs{display:inline-flex;background:var(--white);border:1px solid rgba(58,64,47,.12);border-radius:999px;padding:3px}
+.tab{border:0;background:transparent;padding:7px 16px;border-radius:999px;font-family:var(--font-display);font-weight:600;font-size:.84rem;color:var(--ink-soft)}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--cream)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.chip{border:1px solid rgba(58,64,47,.18);background:transparent;border-radius:999px;padding:5px 12px;font-size:.78rem;color:var(--ink-soft);display:inline-flex;align-items:center;gap:7px}
+.chip .swatch{width:10px;height:10px;border-radius:2px;transform:rotate(45deg)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--cream);border-color:var(--ink)}
+.chip.reset{border-style:dashed}
+
+/* ---------- layout telar + panel ---------- */
+.stage{display:grid;gap:22px;grid-template-columns:1fr;align-items:start;margin-top:6px}
+@media(min-width:980px){.stage{grid-template-columns:minmax(0,540px) minmax(0,1fr)}
+  .stage > .panel{grid-column:2;grid-row:1}
+  .stage > .side{grid-column:2;grid-row:2;align-self:start}
+  .stage > .loom{grid-column:1;grid-row:1 / span 2}}
+
+/* ---------- telar ---------- */
+.loom{background:var(--white);border:1px solid rgba(58,64,47,.12);border-radius:var(--radius-m);padding:10px 8px 14px;overflow:hidden}
+@media(min-width:820px){.loom{padding:14px 14px 18px}}
+.grid-head,.grid-row{display:grid;grid-template-columns:26px repeat(7,minmax(0,1fr));gap:2px}
+@media(min-width:560px){.grid-head,.grid-row{grid-template-columns:44px repeat(7,minmax(0,1fr));gap:3px}}
+.grid-head{margin-bottom:5px;align-items:end}
+.col-head{text-align:center;padding:2px 1px 5px;cursor:pointer;background:transparent;border:0;border-bottom:2px solid transparent}
+.col-head .letter{font-family:var(--font-display);font-weight:700;font-size:.78rem;color:var(--ink-strong);display:block}
+.col-head .name{display:none;font-size:.62rem;letter-spacing:.03em;color:var(--ink-soft);line-height:1.2}
+@media(min-width:560px){.col-head .name{display:block}}
+.col-head[aria-pressed="true"]{border-bottom-color:var(--terracotta)}
+.corner{font-size:.58rem;color:var(--ink-soft);text-align:center;padding-bottom:6px}
+.row-label{display:flex;align-items:center;justify-content:flex-end;padding-right:5px;font-size:.6rem;font-variant-numeric:tabular-nums;color:var(--ink-soft);letter-spacing:.02em}
+@media(min-width:560px){.row-label{font-size:.68rem}}
+.cell{position:relative;aspect-ratio:1/1;border:0;padding:0;background:transparent;display:block;overflow:hidden;border-radius:2px;transition:transform var(--dur) var(--ease)}
+.cell .warp{position:absolute;inset:0}
+.cell:hover,.cell:focus-visible{transform:scale(1.07);z-index:3}
+.cell.is-active{transform:scale(1.07);z-index:3;box-shadow:0 0 0 2px var(--ink-strong)}
+.cell.is-empty{cursor:default}
+.cell.is-empty:hover{transform:none}
+.ghost-motif{position:absolute;inset:22%;opacity:.11}
+.patch{position:absolute}
+.patch.fresh{animation:bloom .55s var(--ease) both}
+@keyframes bloom{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:scale(1)}}
+.patch.off{opacity:.14;filter:grayscale(1)}
+.cell.dimmed .patch{opacity:.14;filter:grayscale(1)}
+.loom-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}
+.hint{font-size:.72rem;color:var(--ink-soft)}
+.play{border:1px solid var(--ink);background:transparent;color:var(--ink);border-radius:999px;padding:7px 16px;font-family:var(--font-display);font-weight:600;font-size:.78rem}
+.play:hover{background:var(--ink);color:var(--cream)}
+
+/* ---------- panel ---------- */
+.panel{background:var(--white);border:1px solid rgba(58,64,47,.12);border-radius:var(--radius-m);padding:18px}
+@media(min-width:980px){.panel{position:sticky;top:18px}}
+@media(max-width:979px){
+  .panel{position:fixed;left:0;right:0;bottom:0;z-index:40;border-radius:var(--radius-l) var(--radius-l) 0 0;box-shadow:0 -18px 45px -12px rgba(38,43,29,.4);transform:translateY(102%);transition:transform .3s var(--ease);max-height:74vh;overflow:auto;padding-bottom:26px}
+  .panel.open{transform:translateY(0)}
+  .panel::before{content:"";display:block;width:42px;height:4px;border-radius:2px;background:rgba(58,64,47,.2);margin:0 auto 14px}
+}
+.panel-close{display:none}
+@media(max-width:979px){.panel-close{display:inline-block;position:absolute;top:14px;right:14px;border:0;background:transparent;font-size:1.3rem;line-height:1;color:var(--ink-soft)}}
+.panel .eyebrow{font-family:var(--font-display);font-weight:600;font-size:.66rem;letter-spacing:.13em;text-transform:uppercase;color:var(--terracotta);margin-bottom:8px}
+.quote{font-family:var(--font-accent);font-size:1.06rem;line-height:1.45;color:var(--ink-strong);margin:0 0 14px}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.tag{font-size:.7rem;border-radius:999px;padding:3px 10px;background:var(--cream);color:var(--ink-soft);border:1px solid rgba(58,64,47,.1)}
+.tag.solid{color:var(--white);border-color:transparent}
+.panel dl{margin:0;font-size:.8rem;color:var(--ink-soft)}
+.panel dt{font-weight:600;color:var(--ink);float:left;margin-right:6px}
+.panel dd{margin:0 0 5px}
+.panel .audio{margin-top:14px;display:flex;align-items:center;gap:9px;font-size:.76rem;color:var(--ink-soft);border-top:1px solid rgba(58,64,47,.1);padding-top:12px}
+.empty-state{color:var(--ink-soft);font-size:.86rem}
+
+/* ---------- leyenda ---------- */
+.legend{margin:22px 0 0;display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:700px){.legend{grid-template-columns:1fr 1fr}}
+.legend h3{font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:10px}
+.legend ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 18px}
+.legend li{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--ink)}
+
+/* ---------- lista ---------- */
+.threads{display:grid;gap:10px;grid-template-columns:1fr}
+@media(min-width:700px){.threads{grid-template-columns:1fr 1fr}}
+.thread{background:var(--white);border:1px solid rgba(58,64,47,.12);border-left-width:5px;border-radius:var(--radius-s);padding:13px 15px;text-align:left}
+.thread p{font-family:var(--font-accent);font-size:.94rem;color:var(--ink-strong);margin:0 0 8px}
+.thread .meta{margin:0}
+
+/* ---------- ingreso ---------- */
+.form-card{background:var(--white);border:1px solid rgba(58,64,47,.12);border-radius:var(--radius-m);padding:20px;max-width:620px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--ink-soft);margin-bottom:5px}
+.field select,.field textarea,.field input{width:100%;font:inherit;padding:9px 11px;border:1px solid rgba(58,64,47,.22);border-radius:var(--radius-s);background:var(--cream-soft);color:var(--ink)}
+.field textarea{min-height:88px;resize:vertical;font-family:var(--font-accent)}
+.pair{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:560px){.pair{grid-template-columns:1fr 1fr}}
+.submit{background:var(--ink);color:var(--cream);border:0;border-radius:999px;padding:11px 26px;font-family:var(--font-display);font-weight:600}
+.submit:hover{background:var(--ink-strong)}
+.counterchar{font-size:.7rem;color:var(--ink-soft);text-align:right}
+.notice{background:var(--gold-tint);border:1px solid rgba(226,159,62,.45);border-radius:var(--radius-s);padding:11px 14px;font-size:.8rem;margin-bottom:18px;color:var(--ink)}
+
+/* ---------- footer ---------- */
+footer.site{margin-top:44px;background:var(--ink);color:var(--cream);padding:30px 0 34px}
+footer.site h3{color:var(--cream);font-size:.95rem;margin-bottom:8px}
+footer.site p{font-size:.8rem;color:rgba(241,240,236,.72);max-width:62ch}
+footer.site a{color:var(--gold)}
+.ghost{color:var(--ink-soft);font-size:.72rem}
+[hidden]{display:none !important}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+
+<div class="selvage" id="selvage-top"></div>
+
+<header class="site">
+  <div class="wrap">
+    <div class="brandline">
+      <span class="wordmark">TELARES</span><span class="sep"></span>
+      <span class="kicker">Encuentro de lanzamiento · UMAG</span>
+    </div>
+    <h1>Telar del Encuentro</h1>
+    <p class="lede">Cada parche es algo que alguien dijo en una mesa. La urdimbre la puso el proyecto; la trama la tejieron quienes vinieron.</p>
+
+    <div class="counters" id="counters"></div>
+
+    <section class="programa" aria-label="Programa del encuentro">
+      <h2>El orillo: lo que pasó antes del taller</h2>
+      <div class="prog-track" id="prog-track"></div>
+    </section>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="toolbar">
+    <div class="tabs" role="tablist" aria-label="Vistas del telar">
+      <button class="tab" role="tab" aria-selected="true" data-view="telar">Telar</button>
+      <button class="tab" role="tab" aria-selected="false" data-view="hilos">Hilos</button>
+      <button class="tab" role="tab" aria-selected="false" data-view="ingreso">Ingreso</button>
+    </div>
+    <div class="filters" id="filters"></div>
+  </div>
+
+  <!-- ============ VISTA TELAR ============ -->
+  <section id="view-telar">
+    <div class="stage">
+      <div class="loom">
+        <div class="grid-head" id="grid-head"></div>
+        <div id="grid-body"></div>
+        <div class="loom-foot">
+          <span class="hint" id="hint">Pasa el cursor o toca un parche para leer lo que se dijo.</span>
+          <button class="play" id="play">Ver cómo se tejió</button>
+        </div>
+      </div>
+
+      <aside class="panel" id="panel" aria-live="polite">
+        <button class="panel-close" id="panel-close" aria-label="Cerrar">×</button>
+        <div id="panel-body"></div>
+      </aside>
+
+      <div class="side">
+        <div class="legend">
+          <div>
+            <h3>El color dice quién habló</h3>
+            <ul id="legend-actores"></ul>
+          </div>
+          <div>
+            <h3>La forma dice qué tipo de aporte fue</h3>
+            <ul id="legend-tipos"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VISTA HILOS ============ -->
+  <section id="view-hilos" hidden>
+    <div class="loom-foot" style="margin:0 0 14px">
+      <span class="hint" id="hilos-count"></span>
+      <button class="play" id="download">Descargar datos (JSON)</button>
+    </div>
+    <div class="threads" id="threads"></div>
+  </section>
+
+  <!-- ============ VISTA INGRESO ============ -->
+  <section id="view-ingreso" hidden>
+    <div class="form-card">
+      <p class="notice">Demo del panel de secretaría. Así se vería lo que usan las y los estudiantes que relatan cada mesa. Lo que ingreses acá se teje en el telar de inmediato, pero no se guarda en ningún lado.</p>
+      <div class="pair">
+        <div class="field">
+          <label for="f-mesa">Mesa</label>
+          <select id="f-mesa"></select>
+        </div>
+        <div class="field">
+          <label for="f-actor">¿Quién lo dijo?</label>
+          <select id="f-actor"></select>
+        </div>
+      </div>
+      <div class="pair">
+        <div class="field">
+          <label for="f-tipo">Tipo de aporte</label>
+          <select id="f-tipo"></select>
+        </div>
+        <div class="field">
+          <label for="f-eje">¿Con qué se conecta?</label>
+          <select id="f-eje"></select>
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-texto">La frase, lo más cerca posible de como se dijo</label>
+        <textarea id="f-texto" maxlength="180" placeholder="Una idea por vez. Sin nombres propios."></textarea>
+        <div class="counterchar"><span id="charcount">0</span>/180</div>
+      </div>
+      <button class="submit" id="f-submit">Tejer aporte</button>
+      <p class="ghost" style="margin-top:14px">En producción esto escribe a una hoja de cálculo o a un endpoint, y el telar la relee cada pocos segundos.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <h3>Este telar es también un conjunto de datos</h3>
+    <p>Los aportes se publican sin nombres, bajo licencia CC BY 4.0, y quedan depositados en ARCA-UMAG al cierre del evento. Cualquiera puede volver a mirar lo que se dijo, citarlo o seguir tejiendo encima. Prototipo, agosto 2026.</p>
+  </div>
+</footer>
+
+<script>
+/* =========================================================
+   TELAR DEL ENCUENTRO — prototipo
+   Datos ficticios. Estructura pensada para GitHub Pages:
+   HTML + CSS + JS plano, sin build, sin dependencias.
+   ========================================================= */
+
+var PALETTE = {gold:"#e29f3e", olive:"#85751a", terracotta:"#bb6f3a", ink:"#3a402f", lichen:"#7a8b6a"};
+var TINTS   = ["#fbf0dd","#eeecd6","#f5e6db","#e7ebe2","#fbf0dd","#eeecd6","#f5e6db"];
+
+var EJES = [
+  {id:"A", corto:"Currículo",  nombre:"Actualización curricular"},
+  {id:"B", corto:"Vínculo",    nombre:"Vinculación con el entorno"},
+  {id:"C", corto:"Género",     nombre:"Participación y liderazgo de mujeres"},
+  {id:"D", corto:"Personas",   nombre:"Formación de investigadores y profesionales"},
+  {id:"E", corto:"Gobernanza", nombre:"Gobernanza"},
+  {id:"F", corto:"Apertura",   nombre:"Ciencia y conocimientos abiertos"},
+  {id:"G", corto:"Sinergias",  nombre:"Sinergias"}
+];
+
+var ACTORES = [
+  {id:"estudiantado", label:"Estudiantado",              color:PALETTE.gold},
+  {id:"academia",     label:"Academia",                  color:PALETTE.terracotta},
+  {id:"gestion",      label:"Gestión universitaria",     color:PALETTE.olive},
+  {id:"territorio",   label:"Socios y territorio",       color:PALETTE.ink},
+  {id:"publico",      label:"Instituciones públicas",    color:PALETTE.lichen}
+];
+
+var TIPOS = [
+  {id:"idea",       label:"Idea o propuesta",     forma:"triangulo"},
+  {id:"pregunta",   label:"Pregunta o tensión",   forma:"arco"},
+  {id:"compromiso", label:"Ofrecimiento",         forma:"rombo"},
+  {id:"necesidad",  label:"Necesidad",            forma:"cuadro"}
+];
+
+var PREGUNTAS = [
+  "¿Qué problema de Magallanes no se puede resolver desde una sola disciplina?",
+  "¿Qué debería existir en tres años que hoy no existe?",
+  "¿Qué puedo poner yo, y qué necesito de este proyecto?"
+];
+
+var PROGRAMA = [
+  {hora:"18:00", titulo:"Saludos institucionales", color:PALETTE.olive,
+   detalle:"Rectoría, Decanatura de la Facultad y contraparte ANID abren el encuentro."},
+  {hora:"18:20", titulo:"Presentación musical", color:PALETTE.terracotta,
+   detalle:"Intervención musical a cargo de estudiantes de la universidad."},
+  {hora:"18:35", titulo:"Qué es TELARES", color:PALETTE.gold,
+   detalle:"Presentación del proyecto: los siete ejes, el centro interdisciplinario y los seis años de horizonte."},
+  {hora:"19:00", titulo:"Charla magistral", color:PALETTE.ink,
+   detalle:"Conferencia inaugural sobre interdisciplina y territorios de alta latitud."},
+  {hora:"19:45", titulo:"Taller del telar", color:PALETTE.lichen, activo:true,
+   detalle:"Café en el patio techado y conversación en mesas de 4 a 8 personas. Todo lo que ves abajo salió de acá."}
+];
+
+/* ---------------- datos ficticios ---------------- */
+var MESAS = [];
+for (var m=1; m<=12; m++) MESAS.push({id:"M"+(m<10?"0":"")+m, pregunta:(m-1)%3});
+
+var APORTES = [
+  ["M01","B","territorio","necesidad","La salud mental en Magallanes no la resuelve psicología sola: hay vivienda, hay turnos, hay invierno, hay aislamiento.","19:52"],
+  ["M01","D","academia","idea","Hacer prácticas profesionales conjuntas donde la misma familia sea atendida por trabajo social, psicología y derecho a la vez.","19:58"],
+  ["M01","A","estudiantado","pregunta","¿Cómo hacemos un ramo interdisciplinario si los horarios de las tres carreras nunca calzan?","20:04"],
+  ["M01","G","gestion","compromiso","Desde la dirección de vinculación podemos abrir los convenios que ya existen con los municipios rurales.","20:11"],
+
+  ["M02","C","academia","pregunta","Hablamos de liderazgo de mujeres pero la mayoría de las jefaturas de carrera siguen siendo hombres. ¿Qué cambia con esto?","19:55"],
+  ["M02","C","estudiantado","idea","Un fondo pequeño para que estudiantes mujeres presenten sus propios proyectos de investigación desde primer año.","20:02"],
+  ["M02","E","publico","necesidad","Necesitamos que el proyecto tenga una contraparte estable con quien hablar, no un correo distinto cada vez.","20:09"],
+
+  ["M03","F","estudiantado","pregunta","Si los datos son abiertos, ¿qué pasa con lo que cuenta la gente en una entrevista? No todo se puede publicar.","19:50"],
+  ["M03","F","academia","idea","Publicar los instrumentos y los protocolos aunque los datos crudos queden restringidos. Eso ya es apertura.","19:57"],
+  ["M03","F","gestion","compromiso","La biblioteca puede hacerse cargo del depósito en el repositorio institucional y de los identificadores.","20:06"],
+  ["M03","A","academia","idea","Un módulo de ciencia abierta obligatorio en las tres carreras, no un taller optativo que toman diez personas.","20:14"],
+
+  ["M04","B","territorio","idea","Que el centro atienda casos reales de Puerto Natales por videollamada, con un profesional que viaje una vez al mes.","19:53"],
+  ["M04","B","publico","necesidad","En el sistema de protección de infancia nos faltan informes psicosociales. Ahí hay algo que la universidad podría cubrir.","20:00"],
+  ["M04","G","territorio","compromiso","Nuestra fundación puede poner el espacio en Natales si la universidad pone las horas profesionales.","20:08"],
+
+  ["M05","D","academia","necesidad","Para trabajar interdisciplinariamente necesitamos horas protegidas. Hoy todo esto se hace encima de la carga docente.","19:56"],
+  ["M05","E","academia","pregunta","¿Quién decide qué se prioriza cuando los tres departamentos quieren cosas distintas?","20:03"],
+  ["M05","D","estudiantado","idea","Que los ayudantes de investigación sean de carreras distintas a la del profesor que dirige.","20:10"],
+
+  ["M06","A","estudiantado","necesidad","Salimos sabiendo mucha teoría y muy poco de cómo se escribe un informe para un tribunal o un municipio.","19:51"],
+  ["M06","A","estudiantado","idea","Un taller donde derecho, psicología y trabajo social resuelvan el mismo caso y después comparen qué vio cada uno.","19:59"],
+  ["M06","D","academia","compromiso","Ofrezco abrir mi curso de metodología a estudiantes de las otras dos carreras el próximo semestre.","20:07"],
+  ["M06","B","territorio","pregunta","¿Cómo evitan que esto quede como un proyecto de la universidad hablando consigo misma?","20:15"],
+
+  ["M07","G","gestion","idea","Cruzar esto con lo que ya hace Ciencia 2030 y el ScienceHub en vez de armar una estructura paralela.","19:54"],
+  ["M07","G","academia","pregunta","¿Cuántas iniciativas parecidas hay hoy en la universidad y cuántas se hablan entre sí?","20:01"],
+  ["M07","E","gestion","necesidad","Falta un lugar donde uno vea todos los proyectos institucionales en una sola pantalla.","20:12"],
+
+  ["M08","B","publico","idea","La industria del hidrógeno verde va a llegar con o sin nosotros. Que las ciencias sociales estudien qué le pasa a la gente antes y no después.","19:57"],
+  ["M08","B","territorio","necesidad","La comunidad quiere ser consultada, no encuestada al final cuando ya está todo decidido.","20:05"],
+  ["M08","F","academia","idea","Publicar los resultados de esos estudios en abierto para que las organizaciones puedan usarlos en sus propias negociaciones.","20:13"],
+
+  ["M09","C","gestion","compromiso","La Dirección de Género puede acompañar el diseño de los concursos académicos para que no reproduzcan lo de siempre.","19:52"],
+  ["M09","C","estudiantado","pregunta","¿El enfoque de género va a estar en los ramos o va a seguir siendo una charla al año en marzo?","20:00"],
+  ["M09","A","academia","idea","Revisar las bibliografías de los programas: quién está citado y quién no aparece nunca.","20:09"],
+
+  ["M10","D","publico","idea","Formar a los equipos municipales junto con los estudiantes. Los dos aprenden y sale más barato.","19:55"],
+  ["M10","E","publico","compromiso","Podemos poner a alguien de la Seremi en el espacio de gobernanza si se reúne con una frecuencia razonable.","20:04"],
+  ["M10","G","publico","necesidad","Nos sirve más un convenio que dure seis años que diez actividades sueltas.","20:11"],
+
+  ["M11","F","estudiantado","idea","Que las tesis queden en un repositorio con licencia abierta y no en un cajón de la biblioteca.","19:58"],
+  ["M11","A","estudiantado","necesidad","Nadie nos enseña a manejar datos. Llegamos a la tesis y recién ahí aprendemos a los golpes.","20:06"],
+  ["M11","F","academia","compromiso","Puedo dictar el primer taller de gestión de datos con R para estudiantes de las tres carreras.","20:14"],
+
+  ["M12","B","territorio","pregunta","¿Qué pasa con este centro cuando se acabe el financiamiento en seis años?","19:53"],
+  ["M12","E","gestion","idea","Dejar comprometido desde ahora el presupuesto institucional que va a sostener el centro después del proyecto.","20:02"],
+  ["M12","G","academia","idea","Amarrar el centro a un programa de postgrado. Si hay estudiantes matriculados, no se cierra fácil.","20:10"],
+  ["M12","D","territorio","compromiso","Nosotros podemos recibir practicantes todos los semestres. Eso no depende del financiamiento de nadie.","20:16"]
+];
+
+var data = APORTES.map(function(a,i){
+  return {id:"a"+(i+1), mesa:a[0], eje:a[1], actor:a[2], tipo:a[3], texto:a[4], hora:a[5],
+          audio: i%3===0, nuevo:false};
+});
+
+/* ---------------- helpers ---------------- */
+function actorOf(id){ return ACTORES.filter(function(a){return a.id===id})[0]; }
+function tipoOf(id){ return TIPOS.filter(function(t){return t.id===id})[0]; }
+function ejeOf(id){ return EJES.filter(function(e){return e.id===id})[0]; }
+function mesaOf(id){ return MESAS.filter(function(m){return m.id===id})[0]; }
+function hash(s){ var h=0; for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))|0} return Math.abs(h); }
+
+/* motivos: dibujados en una caja 0..100, rotados de forma determinista */
+function motif(forma, color, seed){
+  var rot = [0,90,180,270][seed%4];
+  var d;
+  if (forma==="triangulo") d='<path d="M50 12 L92 84 L8 84 Z" fill="'+color+'"/>';
+  else if (forma==="arco") d='<path d="M8 92 A84 84 0 0 1 92 8 L92 92 Z" fill="'+color+'"/>';
+  else if (forma==="rombo") d='<path d="M50 6 L94 50 L50 94 L6 50 Z" fill="'+color+'"/>';
+  else d='<rect x="12" y="12" width="76" height="76" fill="'+color+'"/><rect x="34" y="34" width="32" height="32" fill="#f1f0ec" opacity=".85"/>';
+  return '<svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true" '+
+         'style="display:block"><g transform="rotate('+rot+' 50 50)">'+d+'</g></svg>';
+}
+
+/* ---------------- estado ---------------- */
+var state = {view:"telar", actor:null, tipo:null, eje:null, sel:null, pinned:false, lastId:null};
+
+function visible(d){
+  if (state.actor && d.actor!==state.actor) return false;
+  if (state.tipo && d.tipo!==state.tipo) return false;
+  if (state.eje && d.eje!==state.eje) return false;
+  return true;
+}
+
+/* ---------------- render: contadores ---------------- */
+function renderCounters(){
+  var mesasActivas = {}; data.forEach(function(d){mesasActivas[d.mesa]=1});
+  var items = [
+    [data.length, "aportes tejidos"],
+    [Object.keys(mesasActivas).length, "mesas"],
+    ["138", "personas"],
+    [ACTORES.length, "tipos de actor"]
+  ];
+  document.getElementById("counters").innerHTML = items.map(function(i){
+    return '<div class="counter"><b>'+i[0]+'</b><span>'+i[1]+'</span></div>';
+  }).join("");
+}
+
+/* ---------------- render: programa ---------------- */
+function renderPrograma(){
+  document.getElementById("prog-track").innerHTML = PROGRAMA.map(function(p,i){
+    return '<button class="prog-item'+(p.activo?"":" done")+'" data-prog="'+i+'">'+
+      '<span class="prog-dot">'+motif(i%2?"rombo":"triangulo", p.color, i)+'</span>'+
+      '<span>'+p.titulo+'</span><small>'+p.hora+'</small></button>';
+  }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-prog]"), function(b){
+    b.addEventListener("click", function(){ showPrograma(PROGRAMA[+b.dataset.prog]); });
+  });
+}
+
+/* ---------------- render: filtros ---------------- */
+function renderFilters(){
+  var html = ACTORES.map(function(a){
+    return '<button class="chip" data-f="actor" data-v="'+a.id+'" aria-pressed="false">'+
+      '<span class="swatch" style="background:'+a.color+'"></span>'+a.label+'</button>';
+  }).join("");
+  html += '<button class="chip reset" data-f="reset" aria-pressed="false">Ver todo</button>';
+  document.getElementById("filters").innerHTML = html;
+  Array.prototype.forEach.call(document.querySelectorAll("#filters .chip"), function(b){
+    b.addEventListener("click", function(){
+      if (b.dataset.f==="reset"){ state.actor=null; state.tipo=null; state.eje=null; }
+      else { state.actor = state.actor===b.dataset.v ? null : b.dataset.v; }
+      syncFilters(); renderTelar(); renderThreads();
+    });
+  });
+}
+function syncFilters(){
+  Array.prototype.forEach.call(document.querySelectorAll("#filters .chip"), function(b){
+    b.setAttribute("aria-pressed", b.dataset.f==="actor" && state.actor===b.dataset.v ? "true":"false");
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".col-head"), function(b){
+    b.setAttribute("aria-pressed", state.eje===b.dataset.eje ? "true":"false");
+  });
+}
+
+/* ---------------- render: telar ---------------- */
+function renderHead(){
+  var html = '<div class="corner">mesa</div>';
+  html += EJES.map(function(e){
+    return '<button class="col-head" data-eje="'+e.id+'" aria-pressed="false" title="'+e.nombre+'">'+
+      '<span class="letter">'+e.id+'</span><span class="name">'+e.corto+'</span></button>';
+  }).join("");
+  document.getElementById("grid-head").innerHTML = html;
+  Array.prototype.forEach.call(document.querySelectorAll(".col-head"), function(b){
+    b.addEventListener("click", function(){
+      state.eje = state.eje===b.dataset.eje ? null : b.dataset.eje;
+      syncFilters(); renderTelar(); renderThreads();
+    });
+  });
+}
+
+function renderTelar(){
+  var body = document.getElementById("grid-body");
+  var html = "";
+  MESAS.forEach(function(mesa, ri){
+    html += '<div class="grid-row">';
+    html += '<div class="row-label">'+mesa.id.replace("M","")+'</div>';
+    EJES.forEach(function(eje, ci){
+      var items = data.filter(function(d){ return d.mesa===mesa.id && d.eje===eje.id; });
+      var tint = TINTS[ci];
+      if (!items.length){
+        var g = ["triangulo","arco","rombo","cuadro"][(ri+ci)%4];
+        html += '<span class="cell is-empty" aria-hidden="true">'+
+                '<span class="warp" style="background:'+tint+'"></span>'+
+                '<span class="ghost-motif">'+motif(g,"#3a402f",ri+ci)+'</span></span>';
+        return;
+      }
+      var n = Math.min(items.length,4);
+      var patches = "";
+      items.slice(0,4).forEach(function(d, k){
+        var a = actorOf(d.actor), t = tipoOf(d.tipo);
+        var pos;
+        if (n===1) pos = "inset:11%;";
+        else if (n===2) pos = (k===0? "left:4%;":"left:52%;")+"top:14%;width:44%;height:72%;";
+        else pos = "left:"+(k%2?52:4)+"%;top:"+(k<2?4:52)+"%;width:44%;height:44%;";
+        patches += '<span class="patch'+(visible(d)?"":" off")+(d.id===state.lastId?" fresh":"")+'" style="'+pos+'" data-id="'+d.id+'">'+
+                   motif(t.forma, a.color, hash(d.id))+'</span>';
+      });
+      var dimmed = items.some(visible) ? "" : " dimmed";
+      var label = items.length+" aporte"+(items.length>1?"s":"")+" de la mesa "+mesa.id+" en el eje "+eje.nombre;
+      html += '<button class="cell'+dimmed+'" data-cell="'+mesa.id+"|"+eje.id+'" aria-label="'+label+'">'+
+              '<span class="warp" style="background:'+tint+'"></span>'+patches+'</button>';
+    });
+    html += '</div>';
+  });
+  body.innerHTML = html;
+  bindCells();
+}
+function bindCells(){
+  Array.prototype.forEach.call(document.querySelectorAll("[data-cell]"), function(c){
+    var key = c.dataset.cell.split("|");
+    var items = data.filter(function(d){ return d.mesa===key[0] && d.eje===key[1]; });
+    items.sort(function(x,y){ return (visible(y)?1:0)-(visible(x)?1:0); });
+    c.addEventListener("mouseenter", function(){ if(!state.pinned) showAporte(items[0], items, c); });
+    c.addEventListener("focus", function(){ if(!state.pinned) showAporte(items[0], items, c); });
+    c.addEventListener("click", function(){
+      state.pinned = true; showAporte(items[0], items, c); openSheet();
+    });
+  });
+}
+
+/* ---------------- panel ---------------- */
+function markActive(el){
+  Array.prototype.forEach.call(document.querySelectorAll(".cell.is-active"), function(c){c.classList.remove("is-active")});
+  if (el) el.classList.add("is-active");
+}
+function showAporte(d, siblings, el){
+  if (!d) return;
+  markActive(el);
+  var a = actorOf(d.actor), t = tipoOf(d.tipo), e = ejeOf(d.eje), mesa = mesaOf(d.mesa);
+  var otros = (siblings||[]).filter(function(s){return s.id!==d.id});
+  var html = '<div class="eyebrow">Mesa '+d.mesa.replace("M","")+' · '+d.hora+'</div>'+
+    '<p class="quote">“'+d.texto+'”</p>'+
+    '<div class="meta">'+
+      '<span class="tag solid" style="background:'+a.color+'">'+a.label+'</span>'+
+      '<span class="tag">'+t.label+'</span>'+
+      '<span class="tag">Eje '+e.id+' · '+e.corto+'</span>'+
+    '</div>'+
+    '<dl><dt>Pregunta:</dt><dd>'+PREGUNTAS[mesa.pregunta]+'</dd></dl>';
+  if (otros.length){
+    html += '<div class="audio" style="display:block"><strong style="font-size:.72rem;letter-spacing:.08em;text-transform:uppercase">También en este cruce</strong>';
+    otros.forEach(function(o){
+      html += '<button class="thread" style="border-left-color:'+actorOf(o.actor).color+';margin-top:8px;width:100%" data-jump="'+o.id+'">'+
+              '<p style="margin:0;font-size:.86rem">“'+o.texto.slice(0,86)+(o.texto.length>86?"…":"")+'”</p></button>';
+    });
+    html += '</div>';
+  }
+  if (d.audio) html += '<div class="audio">Hay registro de audio de esta mesa. El fragmento empieza cerca de '+d.hora+'.</div>';
+  document.getElementById("panel-body").innerHTML = html;
+  Array.prototype.forEach.call(document.querySelectorAll("[data-jump]"), function(b){
+    b.addEventListener("click", function(){
+      var next = data.filter(function(x){return x.id===b.dataset.jump})[0];
+      showAporte(next, siblings, el);
+    });
+  });
+}
+function showPrograma(p){
+  state.pinned = true; markActive(null);
+  document.getElementById("panel-body").innerHTML =
+    '<div class="eyebrow">Programa · '+p.hora+'</div>'+
+    '<h2 style="font-size:1.2rem;margin-bottom:10px">'+p.titulo+'</h2>'+
+    '<p style="font-size:.9rem;color:var(--ink-soft)">'+p.detalle+'</p>'+
+    '<div class="audio">El registro audiovisual queda enlazado acá después del evento.</div>';
+  openSheet();
+}
+function resetPanel(){
+  document.getElementById("panel-body").innerHTML =
+    '<div class="eyebrow">Cómo leer el telar</div>'+
+    '<p class="empty-state">Las columnas son los siete ejes del proyecto: eso ya estaba puesto, es la urdimbre. '+
+    'Cada fila es una mesa de conversación. Un parche aparece donde una mesa tocó un eje.</p>'+
+    '<p class="empty-state">Toca cualquier parche para leer lo que se dijo ahí.</p>';
+}
+
+function openSheet(){ if (window.innerWidth < 980) document.getElementById("panel").classList.add("open"); }
+document.getElementById("panel-close").addEventListener("click", function(){
+  document.getElementById("panel").classList.remove("open"); state.pinned=false; markActive(null); resetPanel();
+});
+document.addEventListener("keydown", function(e){
+  if (e.key==="Escape"){ document.getElementById("panel").classList.remove("open"); state.pinned=false; markActive(null); resetPanel(); }
+});
+
+/* ---------------- leyendas ---------------- */
+function renderLegends(){
+  document.getElementById("legend-actores").innerHTML = ACTORES.map(function(a){
+    return '<li><span style="width:16px;height:16px;display:inline-block">'+motif("rombo",a.color,0)+'</span>'+a.label+'</li>';
+  }).join("");
+  document.getElementById("legend-tipos").innerHTML = TIPOS.map(function(t,i){
+    return '<li><span style="width:16px;height:16px;display:inline-block">'+motif(t.forma,"#3a402f",0)+'</span>'+t.label+'</li>';
+  }).join("");
+}
+
+/* ---------------- vista hilos ---------------- */
+function renderThreads(){
+  var list = data.filter(visible);
+  document.getElementById("hilos-count").textContent = list.length+" aportes"+(list.length!==data.length?" de "+data.length:"");
+  document.getElementById("threads").innerHTML = list.map(function(d){
+    var a = actorOf(d.actor), t = tipoOf(d.tipo), e = ejeOf(d.eje);
+    return '<div class="thread" style="border-left-color:'+a.color+'">'+
+      '<p>“'+d.texto+'”</p><div class="meta">'+
+      '<span class="tag">Mesa '+d.mesa.replace("M","")+'</span>'+
+      '<span class="tag">'+a.label+'</span>'+
+      '<span class="tag">'+t.label+'</span>'+
+      '<span class="tag">Eje '+e.id+'</span></div></div>';
+  }).join("");
+}
+document.getElementById("download").addEventListener("click", function(){
+  var blob = new Blob([JSON.stringify({evento:"Lanzamiento TELARES", licencia:"CC BY 4.0", aportes:data}, null, 2)], {type:"application/json"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a"); a.href=url; a.download="telar-aportes.json"; a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ---------------- ingreso ---------------- */
+function fillSelects(){
+  document.getElementById("f-mesa").innerHTML = MESAS.map(function(m){return '<option value="'+m.id+'">Mesa '+m.id.replace("M","")+'</option>'}).join("");
+  document.getElementById("f-actor").innerHTML = ACTORES.map(function(a){return '<option value="'+a.id+'">'+a.label+'</option>'}).join("");
+  document.getElementById("f-tipo").innerHTML = TIPOS.map(function(t){return '<option value="'+t.id+'">'+t.label+'</option>'}).join("");
+  document.getElementById("f-eje").innerHTML = EJES.map(function(e){return '<option value="'+e.id+'">'+e.id+' · '+e.nombre+'</option>'}).join("");
+}
+document.getElementById("f-texto").addEventListener("input", function(e){
+  document.getElementById("charcount").textContent = e.target.value.length;
+});
+document.getElementById("f-submit").addEventListener("click", function(){
+  var txt = document.getElementById("f-texto").value.trim();
+  if (!txt){ document.getElementById("f-texto").focus(); return; }
+  var now = new Date();
+  state.lastId = "a"+(data.length+1);
+  data.push({id:"a"+(data.length+1), mesa:document.getElementById("f-mesa").value,
+    eje:document.getElementById("f-eje").value, actor:document.getElementById("f-actor").value,
+    tipo:document.getElementById("f-tipo").value, texto:txt,
+    hora:("0"+now.getHours()).slice(-2)+":"+("0"+now.getMinutes()).slice(-2), audio:false});
+  document.getElementById("f-texto").value=""; document.getElementById("charcount").textContent="0";
+  setView("telar"); renderCounters(); renderTelar(); renderThreads();
+});
+
+/* ---------------- vistas ---------------- */
+function setView(v){
+  state.view = v;
+  ["telar","hilos","ingreso"].forEach(function(k){
+    document.getElementById("view-"+k).hidden = (k!==v);
+  });
+  Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(t){
+    t.setAttribute("aria-selected", t.dataset.view===v ? "true":"false");
+  });
+  document.getElementById("filters").style.display = (v==="ingreso") ? "none":"flex";
+}
+Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(t){
+  t.addEventListener("click", function(){ setView(t.dataset.view); });
+});
+
+/* ---------------- reproducción del tejido ---------------- */
+document.getElementById("play").addEventListener("click", function(){
+  var btn = this; btn.disabled = true; btn.textContent = "Tejiendo…";
+  var kept = data.slice(); data.length = 0;
+  renderTelar(); renderCounters();
+  var i = 0;
+  var timer = setInterval(function(){
+    state.lastId = kept[i].id;
+    data.push(kept[i]); i++;
+    renderTelar(); renderCounters();
+    if (i>=kept.length){ clearInterval(timer); state.lastId=null; btn.disabled=false; btn.textContent="Ver cómo se tejió"; renderThreads(); }
+  }, 130);
+});
+
+/* ---------------- orillo superior ---------------- */
+(function(){
+  var cols = [PALETTE.gold, PALETTE.olive, PALETTE.terracotta, PALETTE.ink, PALETTE.lichen];
+  var parts = [], n = 40, tile = 40;
+  for (var i=0;i<n;i++){
+    var cx = i*tile+tile/2, up = i%2===0, cy = up?11:29, r=13;
+    parts.push('<path d="M'+cx+' '+(cy-r)+' L'+(cx+r)+' '+cy+' L'+cx+' '+(cy+r)+' L'+(cx-r)+' '+cy+' Z" fill="'+cols[i%cols.length]+'" opacity=".9"/>');
+  }
+  document.getElementById("selvage-top").innerHTML =
+    '<svg viewBox="0 0 '+(n*tile)+' 40" preserveAspectRatio="none" width="100%" height="10" aria-hidden="true">'+parts.join("")+'</svg>';
+})();
+
+/* ---------------- init ---------------- */
+renderCounters(); renderPrograma(); renderFilters(); renderHead(); renderTelar();
+renderLegends(); renderThreads(); fillSelects(); resetPanel(); syncFilters();
+</script>
+</body>
+</html>

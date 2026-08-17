@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Telar / Taller de tramas — TELARES UMAG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#f1f0ec; --cream-soft:#f8f7f3;
+  --ink:#3a402f; --ink-strong:#262b1d; --ink-deep:#1c2015; --ink-soft:#5c6350;
+  --gold:#e29f3e; --olive:#85751a; --terracotta:#bb6f3a; --lichen:#7a8b6a;
+  --line:rgba(241,240,236,.14);
+  --font-display:"Poppins","Segoe UI",sans-serif;
+  --font-body:"Inter","Segoe UI",sans-serif;
+  --font-accent:"Lora",Georgia,serif;
+  --dur:.2s; --ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;overflow-x:hidden;background:var(--ink-deep);color:var(--cream);font-family:var(--font-body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.15}
+button{font:inherit;color:inherit;cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px;border-radius:3px}
+input[type=range]{accent-color:var(--gold)}
+
+/* ---------- shell ---------- */
+.topbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(28,32,21,.94);backdrop-filter:blur(8px);z-index:20}
+.mark{display:flex;align-items:baseline;gap:10px}
+.mark b{font-family:var(--font-display);font-weight:700;letter-spacing:.2em;font-size:.82rem}
+.mark span{font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold)}
+.topbar .grow{flex:1}
+.act{border:1px solid rgba(241,240,236,.24);border-radius:999px;padding:7px 15px;font-size:.78rem;font-family:var(--font-display);font-weight:600;transition:all var(--dur) var(--ease)}
+.act:hover{background:var(--cream);color:var(--ink-strong);border-color:var(--cream)}
+.act.primary{background:var(--gold);border-color:var(--gold);color:var(--ink-strong)}
+.act.primary:hover{background:#f0b055;border-color:#f0b055;color:var(--ink-strong)}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:0;min-height:calc(100vh - 60px)}
+@media(min-width:1000px){.layout{grid-template-columns:minmax(0,352px) minmax(0,1fr)}}
+
+/* ---------- rail ---------- */
+.rail{border-right:1px solid var(--line);padding:20px;display:flex;flex-direction:column;gap:24px;order:2;min-width:0}
+@media(min-width:1000px){.rail{order:1;max-height:calc(100vh - 60px);overflow-y:auto}}
+.block > h3{font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(241,240,236,.5);margin-bottom:11px;display:flex;justify-content:space-between;align-items:center}
+.fig{display:inline-block;font-size:.6rem;letter-spacing:.1em;color:var(--ink-strong);background:var(--gold);border-radius:3px;padding:1px 5px;margin-right:7px;vertical-align:middle}
+.block > h3 em{font-style:normal;color:var(--gold);letter-spacing:.04em;text-transform:none;font-size:.72rem}
+
+/* module strip */
+.strip{display:flex;gap:4px;align-items:stretch;padding:8px;background:rgba(241,240,236,.05);border-radius:12px;overflow-x:auto}
+.slot{flex:0 0 auto;width:52px;height:52px;border-radius:6px;overflow:hidden;position:relative;box-shadow:0 0 0 1px rgba(241,240,236,.14);transition:transform var(--dur) var(--ease),box-shadow var(--dur)}
+.slot:hover{transform:translateY(-2px)}
+.slot.sel{box-shadow:0 0 0 2px var(--gold);transform:translateY(-2px)}
+.slot svg{display:block;width:100%;height:100%}
+.striptools{display:flex;gap:6px;margin-top:9px}
+.mini{border:1px solid rgba(241,240,236,.2);border-radius:8px;padding:5px 11px;font-size:.72rem;transition:all var(--dur)}
+.mini:hover{background:rgba(241,240,236,.1)}
+.mini.danger:hover{background:var(--terracotta);border-color:var(--terracotta)}
+
+/* unit library */
+.units{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.unit{aspect-ratio:1;border-radius:6px;overflow:hidden;box-shadow:0 0 0 1px rgba(241,240,236,.12);transition:transform var(--dur) var(--ease),box-shadow var(--dur)}
+.unit:hover{transform:scale(1.09);box-shadow:0 0 0 2px var(--cream)}
+.unit.on{box-shadow:0 0 0 2px var(--gold)}
+.unit svg{display:block;width:100%;height:100%}
+
+/* colors */
+.roles{display:flex;flex-direction:column;gap:9px}
+.role{display:flex;align-items:center;gap:9px}
+.role > label{width:52px;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(241,240,236,.55)}
+.sw{display:flex;gap:5px}
+.sw button{width:22px;height:22px;border-radius:5px;box-shadow:0 0 0 1px rgba(241,240,236,.22) inset;transition:transform var(--dur)}
+.sw button:hover{transform:scale(1.18)}
+.sw button[aria-pressed=true]{box-shadow:0 0 0 2px var(--cream)}
+
+/* sliders */
+.ctrl{margin-bottom:13px}
+.ctrl label{display:flex;justify-content:space-between;font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:rgba(241,240,236,.55);margin-bottom:5px}
+.ctrl label b{color:var(--cream);font-variant-numeric:tabular-nums;letter-spacing:0}
+.ctrl input[type=range]{width:100%}
+.seg{display:flex;flex-wrap:wrap;gap:5px}
+.seg button{border:1px solid rgba(241,240,236,.2);border-radius:999px;padding:5px 11px;font-size:.72rem;transition:all var(--dur)}
+.seg button[aria-pressed=true]{background:var(--cream);color:var(--ink-strong);border-color:var(--cream)}
+.presets{display:flex;flex-wrap:wrap;gap:6px}
+.presets button{border:1px dashed rgba(241,240,236,.28);border-radius:999px;padding:5px 12px;font-size:.72rem}
+.presets button:hover{border-style:solid;background:rgba(226,159,62,.16);border-color:var(--gold)}
+.note{font-size:.7rem;color:rgba(241,240,236,.42);line-height:1.45}
+
+/* ---------- stage ---------- */
+.stage{order:1;padding:22px 20px 30px;display:flex;flex-direction:column;gap:14px;min-width:0}
+@media(max-width:999px){.stage{position:sticky;top:53px;z-index:6;background:var(--ink-deep);padding-bottom:16px;box-shadow:0 18px 24px -16px rgba(0,0,0,.9)}}
+@media(min-width:1000px){.stage{order:2;padding:30px 34px;position:static}}
+.cloth{background:var(--cream);border-radius:14px;padding:14px;box-shadow:0 30px 70px -28px rgba(0,0,0,.75);position:relative;overflow:hidden}
+.cloth svg{display:block;width:100%;height:auto}
+.beam{height:9px;border-radius:5px;background:linear-gradient(90deg,var(--olive),var(--gold),var(--terracotta),var(--ink));opacity:.85}
+.status{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:.74rem;color:rgba(241,240,236,.55)}
+.status b{color:var(--cream);font-weight:500}
+.status .live{font-family:var(--font-accent);font-style:italic;color:var(--gold)}
+.tile-g{cursor:pointer}
+.tile-g.hl{filter:brightness(1.06)}
+@keyframes weave{from{opacity:0;transform:scale(.62)}to{opacity:1;transform:scale(1)}}
+.anim .tile-g{animation:weave .42s var(--ease) both;transform-box:fill-box;transform-origin:center}
+@media(prefers-reduced-motion:reduce){.anim .tile-g{animation-duration:.01ms}}
+.legend-row{display:flex;gap:14px;flex-wrap:wrap;font-size:.72rem;color:rgba(241,240,236,.5);align-items:center}
+.legend-row span{display:inline-flex;align-items:center;gap:6px}
+.legend-row i{width:11px;height:11px;border-radius:3px;display:inline-block}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="mark"><b>TELARES</b><span>Taller de tramas</span></div>
+  <div class="grow"></div>
+  <button class="act" id="btn-random">Módulo al azar</button>
+  <button class="act" id="btn-svg">Descargar SVG</button>
+  <button class="act primary" id="btn-weave">Tejer</button>
+</div>
+
+<div class="layout">
+
+  <aside class="rail">
+
+    <section class="block">
+      <h3>Puntos de partida</h3>
+      <div class="presets" id="presets"></div>
+      <p class="note" style="margin:11px 0 0">“Fig. 3” reconstruye el ejemplo del manual de identidad con la paleta nueva.</p>
+    </section>
+
+    <section class="block">
+      <h3><span><span class="fig">Fig. 2</span>Módulo</span><em id="mod-len"></em></h3>
+      <div class="strip" id="strip"></div>
+      <div class="striptools">
+        <button class="mini" id="add">Agregar tesela</button>
+        <button class="mini" id="rot">Girar 90°</button>
+        <button class="mini" id="flip">Espejar</button>
+        <button class="mini danger" id="del">Quitar</button>
+      </div>
+      <p class="note" style="margin:9px 0 0">Cada tesela del módulo manda una columna del telar. Toca una tesela acá o en la tela para editarla.</p>
+    </section>
+
+    <section class="block">
+      <h3><span><span class="fig">Fig. 1</span>Unidades gráficas</span></h3>
+      <div class="units" id="units"></div>
+    </section>
+
+    <section class="block">
+      <h3>Color de la tesela</h3>
+      <div class="roles" id="roles"></div>
+      <p class="note" style="margin:11px 0 0">Fondo, figura y acento. El color predominante identifica a la carrera; los otros dos entran como contrapunto.</p>
+    </section>
+
+    <section class="block">
+      <h3><span><span class="fig">Fig. 3</span>Trama</span></h3>
+      <div class="ctrl">
+        <label for="cols">Columnas <b id="cols-v"></b></label>
+        <input type="range" id="cols" min="4" max="24" step="1">
+      </div>
+      <div class="ctrl">
+        <label for="rows">Filas <b id="rows-v"></b></label>
+        <input type="range" id="rows" min="3" max="18" step="1">
+      </div>
+      <div class="ctrl">
+        <label for="round">Redondez <b id="round-v"></b></label>
+        <input type="range" id="round" min="0" max="46" step="1">
+      </div>
+      <div class="ctrl">
+        <label for="gut">Separación de hilos <b id="gut-v"></b></label>
+        <input type="range" id="gut" min="0" max="6" step="1">
+      </div>
+      <div class="ctrl">
+        <label>Regla de repetición</label>
+        <div class="seg" id="rules"></div>
+      </div>
+    </section>
+
+  </aside>
+
+  <main class="stage">
+    <div class="beam"></div>
+    <div class="cloth" id="cloth"></div>
+    <div class="beam"></div>
+    <div class="status">
+      <span id="stat"></span>
+      <span class="live" id="live">&nbsp;</span>
+    </div>
+    <div class="legend-row" id="legend"></div>
+  </main>
+
+</div>
+
+<script>
+/* =========================================================
+   TELARES · Taller de tramas
+   Gramática tomada del manual: unidades gráficas → módulo →
+   patrón por repetición, variación y rotación.
+   HTML + CSS + JS plano. Sin dependencias.
+   ========================================================= */
+
+var C = {
+  cream:"#f1f0ec", gold:"#e29f3e", olive:"#85751a",
+  terracotta:"#bb6f3a", ink:"#3a402f", lichen:"#7a8b6a"
+};
+var SWATCHES = ["gold","terracotta","ink","olive","lichen","cream"];
+var NOMBRE = {gold:"Dorado", terracotta:"Terracota", ink:"Verde tinta", olive:"Oliva", lichen:"Liquen", cream:"Crema"};
+
+/* ---------- geometría ---------- */
+function rpath(x,y,w,h,c,r){            /* c = [tl,tr,br,bl] booleans */
+  var t=r*(c[0]?1:0), tr=r*(c[1]?1:0), br=r*(c[2]?1:0), bl=r*(c[3]?1:0);
+  return "M"+(x+t)+" "+y+
+    " H"+(x+w-tr)+(tr?" A"+tr+" "+tr+" 0 0 1 "+(x+w)+" "+(y+tr):"")+
+    " V"+(y+h-br)+(br?" A"+br+" "+br+" 0 0 1 "+(x+w-br)+" "+(y+h):"")+
+    " H"+(x+bl)+(bl?" A"+bl+" "+bl+" 0 0 1 "+x+" "+(y+h-bl):"")+
+    " V"+(y+t)+(t?" A"+t+" "+t+" 0 0 1 "+(x+t)+" "+y:"")+" Z";
+}
+function P(d,f){ return '<path d="'+d+'" fill="'+f+'"/>'; }
+function tri(pts,f){ return '<polygon points="'+pts+'" fill="'+f+'"/>'; }
+
+/* ---------- unidades gráficas ----------
+   cada una dibuja en una caja 0..100 con [a,b,c] = fondo, figura, acento */
+var UNITS = {
+  cuartos: {nombre:"Cuartos", draw:function(a,b,c,r){
+    return P(rpath(0,0,50,50,[1,0,0,0],r),c)+
+           P(rpath(50,0,50,50,[0,0,0,0],r),b)+
+           P(rpath(0,50,50,50,[0,0,0,0],r),b)+
+           P(rpath(50,50,50,50,[0,0,0,0],r),a)+
+           tri("50,100 100,100 100,50",c);
+  }},
+  barras: {nombre:"Barras", draw:function(a,b,c,r){
+    return P(rpath(0,0,50,100,[0,0,0,0],r),a)+
+           P(rpath(50,0,50,100,[0,1,1,0],r),b);
+  }},
+  nudos: {nombre:"Nudos", draw:function(a,b,c,r){
+    var k=Math.max(r,14);
+    return P(rpath(0,0,100,100,[0,0,0,0],0),a)+
+           P(rpath(0,0,48,48,[1,1,1,1],k),c)+
+           P(rpath(52,52,48,48,[1,1,1,1],k),c)+
+           P(rpath(26,26,48,48,[1,1,1,1],k),b);
+  }},
+  flecha: {nombre:"Flecha", draw:function(a,b,c,r){
+    return P(rpath(0,0,100,100,[0,0,0,0],0),a)+tri("24,16 80,50 24,84",c);
+  }},
+  cadena: {nombre:"Cadena", draw:function(a,b,c,r){
+    var s=34, k=Math.max(r,10), o="";
+    for(var i=0;i<3;i++) o+=P(rpath(33,i*33,s,s,[1,1,1,1],k), i%2?c:b);
+    return P(rpath(0,0,100,100,[0,0,0,0],0),a)+o;
+  }},
+  bloque: {nombre:"Bloque", draw:function(a,b,c,r){
+    return P(rpath(0,0,100,100,[1,0,0,0],r*1.6),c);
+  }},
+  diagonal:{nombre:"Diagonal", draw:function(a,b,c,r){
+    return P(rpath(0,0,100,100,[0,0,0,0],0),a)+tri("0,100 100,100 100,0",c);
+  }},
+  esquina:{nombre:"Esquina", draw:function(a,b,c,r){
+    return P(rpath(0,0,100,100,[0,0,0,0],0),a)+
+           '<path d="M0 0 H100 A100 100 0 0 1 0 100 Z" fill="'+b+'"/>';
+  }},
+  tres:  {nombre:"Tres hilos", draw:function(a,b,c,r){
+    return P(rpath(0,0,100,100,[0,0,0,0],0),a)+
+           P(rpath(0,0,33,100,[0,0,0,0],r),b)+
+           P(rpath(67,0,33,100,[0,0,0,0],r),c);
+  }},
+  punto: {nombre:"Punto", draw:function(a,b,c,r){
+    var k=Math.max(r,12);
+    return P(rpath(0,0,100,100,[0,0,0,0],0),a)+P(rpath(30,30,40,40,[1,1,1,1],k),b);
+  }}
+};
+var UKEYS = Object.keys(UNITS);
+
+/* ---------- reglas de repetición ---------- */
+var RULES = {
+  repetir: {nombre:"Repetir",  fn:function(r,c,L){ return {i:c%L, rot:0, flip:false}; }},
+  espejo:  {nombre:"Espejo",   fn:function(r,c,L){ return r%2 ? {i:(L-1-(c%L)), rot:0, flip:true} : {i:c%L, rot:0, flip:false}; }},
+  girar:   {nombre:"Girar",    fn:function(r,c,L){ return {i:c%L, rot:90*(r%4), flip:false}; }},
+  ladrillo:{nombre:"Ladrillo", fn:function(r,c,L){ return {i:(c+Math.floor(L/2)*r)%L, rot:0, flip:false}; }},
+  tejido:  {nombre:"Tejido",   fn:function(r,c,L){ return {i:(c+r)%L, rot:180*(r%2), flip:(r%4>1)}; }},
+  terraceo:{nombre:"Terraceo", fn:function(r,c,L){ return {i:(c+r*2)%L, rot:90*((r+c)%2), flip:false}; }}
+};
+var RKEYS = Object.keys(RULES);
+
+/* ---------- presets ---------- */
+function slot(u,cols,rot,flip){ return {u:u, c:cols, rot:rot||0, flip:!!flip}; }
+var PRESETS = {
+  "Fig. 3 del manual": {rule:"repetir", cols:13, rows:8, r:16, gut:1, mod:[
+    slot("cuartos",["gold","terracotta","ink"]),
+    slot("barras",["gold","terracotta","ink"]),
+    slot("nudos",["gold","terracotta","ink"]),
+    slot("bloque",["gold","gold","ink"]),
+    slot("flecha",["gold","gold","ink"],180),
+    slot("barras",["terracotta","gold","ink"],180),
+    slot("cuartos",["gold","terracotta","ink"],0,true)
+  ]},
+  "Franjas australes": {rule:"ladrillo", cols:14, rows:7, r:22, gut:2, mod:[
+    slot("tres",["cream","olive","gold"]),
+    slot("barras",["olive","cream"]),
+    slot("esquina",["gold","olive"]),
+    slot("barras",["cream","olive"],180),
+    slot("punto",["olive","cream","gold"]),
+    slot("tres",["gold","cream","olive"])
+  ]},
+  "Nudos": {rule:"tejido", cols:10, rows:9, r:40, gut:1, mod:[
+    slot("nudos",["ink","gold","terracotta"]),
+    slot("cadena",["ink","gold","cream"]),
+    slot("punto",["terracotta","cream","ink"]),
+    slot("nudos",["gold","ink","terracotta"])
+  ]},
+  "Tres carreras": {rule:"girar", cols:12, rows:9, r:10, gut:1, mod:[
+    slot("cuartos",["gold","cream","ink"]),
+    slot("flecha",["gold","cream","terracotta"]),
+    slot("diagonal",["terracotta","cream","ink"]),
+    slot("flecha",["terracotta","cream","gold"],180),
+    slot("cuartos",["olive","cream","ink"],90),
+    slot("barras",["olive","gold"])
+  ]},
+  "Mínimo": {rule:"espejo", cols:16, rows:6, r:46, gut:3, mod:[
+    slot("bloque",["cream","cream","ink"]),
+    slot("punto",["cream","gold","cream"]),
+    slot("diagonal",["cream","cream","olive"])
+  ]}
+};
+
+/* ---------- estado ---------- */
+var S = {mod:null, sel:0, rule:"repetir", cols:12, rows:8, r:16, gut:1, hl:null};
+function loadPreset(name){
+  var p = PRESETS[name];
+  S.mod = p.mod.map(function(s){ return {u:s.u, c:s.c.slice(), rot:s.rot, flip:s.flip}; });
+  S.rule=p.rule; S.cols=p.cols; S.rows=p.rows; S.r=p.r; S.gut=p.gut; S.sel=0;
+}
+
+/* ---------- render de una tesela ---------- */
+function colorsOf(sl){
+  var a = C[sl.c[0]] || C.cream;
+  var b = C[sl.c[1]] || a;
+  var c = C[sl.c[2]] || b;
+  return [a,b,c];
+}
+function tileSVG(sl, extraRot, extraFlip, size, cls, delay){
+  var col = colorsOf(sl);
+  var rot = ((sl.rot||0) + (extraRot||0)) % 360;
+  var flip = (!!sl.flip) !== (!!extraFlip);
+  var inner = UNITS[sl.u].draw(col[0], col[1], col[2], S.r);
+  var t = "";
+  if (flip) t += "translate(100,0) scale(-1,1) ";
+  if (rot)  t += "rotate("+rot+" 50 50) ";
+  var style = delay!=null ? ' style="animation-delay:'+delay+'ms"' : '';
+  return '<g class="'+(cls||"")+'"'+style+'><g transform="translate('+size[0]+','+size[1]+') scale('+size[2]/100+')">'+
+         '<g transform="'+t+'">'+inner+'</g></g></g>';
+}
+function thumb(sl, px){
+  return '<svg viewBox="0 0 100 100" aria-hidden="true">'+
+    '<rect width="100" height="100" fill="'+C.cream+'"/>'+
+    tileSVG(sl,0,false,[0,0,100],"")+'</svg>';
+}
+
+/* ---------- render del telar ---------- */
+function buildCloth(animate){
+  var L = S.mod.length, U = 100, g = S.gut;
+  var W = S.cols*U, H = S.rows*U;
+  var out = '<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Telar generado">';
+  out += '<rect width="'+W+'" height="'+H+'" fill="'+C.cream+'"/>';
+  var rule = RULES[S.rule].fn;
+  for (var r=0; r<S.rows; r++){
+    for (var c=0; c<S.cols; c++){
+      var m = rule(r,c,L);
+      var sl = S.mod[m.i];
+      var cls = "tile-g" + (S.hl===m.i ? " hl":"");
+      var delay = animate ? (r*(S.cols*10+70) + c*10) : null;
+      out += '<g data-slot="'+m.i+'">'+
+             tileSVG(sl, m.rot, m.flip, [c*U+g/2, r*U+g/2, U-g], cls, delay)+
+             '</g>';
+    }
+  }
+  out += '</svg>';
+  return out;
+}
+
+/* ---------- render de UI ---------- */
+function renderStrip(){
+  document.getElementById("mod-len").textContent = S.mod.length+" teselas";
+  document.getElementById("strip").innerHTML = S.mod.map(function(sl,i){
+    return '<button class="slot'+(i===S.sel?" sel":"")+'" data-slot-btn="'+i+'" '+
+           'aria-label="Tesela '+(i+1)+', unidad '+UNITS[sl.u].nombre+'">'+thumb(sl)+'</button>';
+  }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-slot-btn]"), function(b){
+    b.addEventListener("click", function(){ S.sel = +b.dataset.slotBtn; renderAll(false); });
+    b.addEventListener("mouseenter", function(){ S.hl = +b.dataset.slotBtn; paintHL(); });
+    b.addEventListener("mouseleave", function(){ S.hl = null; paintHL(); });
+  });
+}
+function renderUnits(){
+  var sl = S.mod[S.sel];
+  document.getElementById("units").innerHTML = UKEYS.map(function(k){
+    var demo = {u:k, c:sl.c, rot:0, flip:false};
+    return '<button class="unit'+(k===sl.u?" on":"")+'" data-unit="'+k+'" title="'+UNITS[k].nombre+'">'+thumb(demo)+'</button>';
+  }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-unit]"), function(b){
+    b.addEventListener("click", function(){ S.mod[S.sel].u = b.dataset.unit; renderAll(false); });
+  });
+}
+function renderRoles(){
+  var sl = S.mod[S.sel];
+  var labels = ["Fondo","Figura","Acento"];
+  document.getElementById("roles").innerHTML = labels.map(function(lab,idx){
+    return '<div class="role"><label>'+lab+'</label><div class="sw">'+
+      SWATCHES.map(function(k){
+        var on = sl.c[idx]===k;
+        return '<button data-role="'+idx+'" data-col="'+k+'" aria-pressed="'+on+'" title="'+NOMBRE[k]+'" '+
+               'style="background:'+C[k]+'"></button>';
+      }).join("")+'</div></div>';
+  }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-role]"), function(b){
+    b.addEventListener("click", function(){
+      var sl = S.mod[S.sel];
+      while (sl.c.length < 3) sl.c.push(sl.c[sl.c.length-1]);
+      sl.c[+b.dataset.role] = b.dataset.col;
+      renderAll(false);
+    });
+  });
+}
+function renderRules(){
+  document.getElementById("rules").innerHTML = RKEYS.map(function(k){
+    return '<button data-rule="'+k+'" aria-pressed="'+(S.rule===k)+'">'+RULES[k].nombre+'</button>';
+  }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-rule]"), function(b){
+    b.addEventListener("click", function(){ S.rule = b.dataset.rule; renderAll(true); });
+  });
+}
+function renderPresets(){
+  document.getElementById("presets").innerHTML = Object.keys(PRESETS).map(function(k){
+    return '<button data-preset="'+k+'">'+k+'</button>';
+  }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-preset]"), function(b){
+    b.addEventListener("click", function(){ loadPreset(b.dataset.preset); syncInputs(); renderAll(true); });
+  });
+}
+function renderLegend(){
+  var used = {};
+  S.mod.forEach(function(sl){ sl.c.forEach(function(k){ used[k]=1; }); });
+  document.getElementById("legend").innerHTML =
+    '<span style="letter-spacing:.12em;text-transform:uppercase;font-size:.66rem">Paleta en uso</span>'+
+    Object.keys(used).map(function(k){
+      return '<span><i style="background:'+C[k]+'"></i>'+NOMBRE[k]+'</span>';
+    }).join("");
+}
+function paintHL(){
+  Array.prototype.forEach.call(document.querySelectorAll("#cloth [data-slot]"), function(g){
+    var on = String(S.hl)===g.dataset.slot;
+    g.querySelector(".tile-g").classList.toggle("hl", on);
+    g.style.opacity = (S.hl===null || on) ? 1 : .34;
+  });
+  var live = document.getElementById("live");
+  if (S.hl===null) live.innerHTML="&nbsp;";
+  else {
+    var sl = S.mod[S.hl];
+    var n = document.querySelectorAll('#cloth [data-slot="'+S.hl+'"]').length;
+    live.textContent = UNITS[sl.u].nombre+", repetida "+n+" veces";
+  }
+}
+function renderCloth(animate){
+  var cloth = document.getElementById("cloth");
+  cloth.classList.remove("anim");
+  cloth.innerHTML = buildCloth(animate);
+  if (animate){ void cloth.offsetWidth; cloth.classList.add("anim"); }
+  Array.prototype.forEach.call(cloth.querySelectorAll("[data-slot]"), function(g){
+    g.addEventListener("click", function(){ S.sel = +g.dataset.slot; renderAll(false); });
+    g.addEventListener("mouseenter", function(){ S.hl = +g.dataset.slot; paintHL(); });
+  });
+  document.getElementById("stat").innerHTML =
+    '<b>'+S.cols+'×'+S.rows+'</b> teselas · módulo de <b>'+S.mod.length+'</b> · regla <b>'+RULES[S.rule].nombre+'</b> · '+
+    'unidad activa <b>'+UNITS[S.mod[S.sel].u].nombre+'</b>';
+}
+function renderAll(animate){
+  renderStrip(); renderUnits(); renderRoles(); renderRules(); renderLegend(); renderCloth(animate);
+}
+
+/* ---------- controles ---------- */
+function bindRange(id, key, fmt){
+  var el = document.getElementById(id), out = document.getElementById(id+"-v");
+  el.addEventListener("input", function(){
+    S[key] = +el.value; out.textContent = fmt? fmt(el.value) : el.value; renderCloth(false);
+  });
+}
+bindRange("cols","cols"); bindRange("rows","rows");
+bindRange("round","r", function(v){ return v+"%"; });
+bindRange("gut","gut", function(v){ return v+" px"; });
+function syncInputs(){
+  [["cols","cols"],["rows","rows"],["round","r"],["gut","gut"]].forEach(function(p){
+    document.getElementById(p[0]).value = S[p[1]];
+    document.getElementById(p[0]+"-v").textContent = p[0]==="round" ? S[p[1]]+"%" : (p[0]==="gut" ? S[p[1]]+" px" : S[p[1]]);
+  });
+}
+
+document.getElementById("add").addEventListener("click", function(){
+  var src = S.mod[S.sel];
+  S.mod.splice(S.sel+1, 0, {u:src.u, c:src.c.slice(), rot:src.rot, flip:src.flip});
+  S.sel++; renderAll(false);
+});
+document.getElementById("rot").addEventListener("click", function(){
+  S.mod[S.sel].rot = ((S.mod[S.sel].rot||0)+90)%360; renderAll(false);
+});
+document.getElementById("flip").addEventListener("click", function(){
+  S.mod[S.sel].flip = !S.mod[S.sel].flip; renderAll(false);
+});
+document.getElementById("del").addEventListener("click", function(){
+  if (S.mod.length<=1) return;
+  S.mod.splice(S.sel,1); S.sel = Math.max(0, S.sel-1); renderAll(false);
+});
+document.getElementById("btn-weave").addEventListener("click", function(){ renderCloth(true); });
+
+document.getElementById("btn-random").addEventListener("click", function(){
+  var famBase = [["gold","terracotta","ink"],["olive","cream","gold"],["ink","gold","terracotta"],["terracotta","cream","olive"],["lichen","cream","ink"]];
+  var fam = famBase[Math.floor(Math.random()*famBase.length)];
+  var n = 3 + Math.floor(Math.random()*4);
+  S.mod = [];
+  for (var i=0;i<n;i++){
+    var perm = fam.slice().sort(function(){ return Math.random()-.5; });
+    S.mod.push({u:UKEYS[Math.floor(Math.random()*UKEYS.length)], c:perm,
+                rot:90*Math.floor(Math.random()*4), flip:Math.random()<.4});
+  }
+  S.rule = RKEYS[Math.floor(Math.random()*RKEYS.length)];
+  S.r = [0,8,16,24,40,46][Math.floor(Math.random()*6)];
+  S.sel = 0; syncInputs(); renderAll(true);
+});
+
+document.getElementById("btn-svg").addEventListener("click", function(){
+  var svg = buildCloth(false).replace('<svg ', '<svg width="'+(S.cols*40)+'" height="'+(S.rows*40)+'" ');
+  var blob = new Blob([svg], {type:"image/svg+xml"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = "telares-trama-"+S.rule+"-"+S.cols+"x"+S.rows+".svg"; a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.addEventListener("keydown", function(e){
+  if (e.target.tagName==="INPUT") return;
+  if (e.key==="ArrowRight"){ S.sel=(S.sel+1)%S.mod.length; renderAll(false); }
+  if (e.key==="ArrowLeft"){ S.sel=(S.sel-1+S.mod.length)%S.mod.length; renderAll(false); }
+  if (e.key==="r"){ S.mod[S.sel].rot=((S.mod[S.sel].rot||0)+90)%360; renderAll(false); }
+  if (e.key==="e"){ S.mod[S.sel].flip=!S.mod[S.sel].flip; renderAll(false); }
+  if (e.key===" "){ e.preventDefault(); renderCloth(true); }
+});
+
+/* ---------- init ---------- */
+document.getElementById("cloth").addEventListener("mouseleave", function(){ S.hl=null; paintHL(); });
+loadPreset("Fig. 3 del manual");
+renderPresets(); syncInputs(); renderAll(true);
+</script>
+</body>
+</html>

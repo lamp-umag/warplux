@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Taller — warplux</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<style>
+  body{padding-bottom:40px}
+  .topbar-admin{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:14px 16px;
+    border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:20}
+  .topbar-admin .grow{flex:1}
+  .marca-admin{font-family:var(--font-display);font-weight:700;letter-spacing:.2em;font-size:.82rem}
+  .marca-admin span{color:var(--accent);letter-spacing:.1em;font-weight:600;font-size:.7rem;margin-left:8px;text-transform:uppercase}
+  select.verComo{background:var(--bg-soft);color:var(--fg);border:1px solid var(--line-strong);
+    border-radius:999px;padding:7px 12px;font-family:var(--font-display);font-size:.78rem}
+</style>
+</head>
+<body data-tema="taller">
+
+<div id="vista-cargando" class="pantalla-estado">
+  <p class="ghost">Cargando…</p>
+</div>
+
+<div id="vista-login" class="pantalla-estado" hidden>
+  <div class="card">
+    <h2 style="font-size:1.1rem;margin-bottom:8px">Taller del telar</h2>
+    <p class="ghost" style="margin-bottom:16px">Entra con tu cuenta Google para urdir, tejer o hilar.</p>
+    <button class="btn primary" id="btn-login">Entrar con Google</button>
+  </div>
+</div>
+
+<div id="vista-admin" hidden>
+  <div class="topbar-admin">
+    <div class="marca-admin">warplux <span id="rol-actual"></span></div>
+    <div class="grow"></div>
+    <select id="select-vercomo" class="verComo" hidden></select>
+    <span class="ghost" id="usuario-nombre"></span>
+    <button class="btn" id="btn-logout">Salir</button>
+    <a class="btn ghost" href="index.html" target="_blank">Ver telar público</a>
+  </div>
+  <main class="wrap" style="padding-top:22px" id="contenido-admin"></main>
+</div>
+
+<div id="vista-sin-acceso" class="pantalla-estado" hidden>
+  <div class="card">
+    <h2 style="font-size:1.05rem;margin-bottom:8px">Sin acceso todavía</h2>
+    <p class="ghost" id="sin-acceso-detalle">Tu cuenta no tiene un rol asignado en este telar. Pide a la maestra tejedora que te agregue.</p>
+    <button class="btn" id="btn-logout-2" style="margin-top:10px">Salir</button>
+  </div>
+</div>
+
+<script type="module" src="js/admin-shell.js"></script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+{
+  "proyecto": {
+    "slug": "telares",
+    "nombre": "TELARES",
+    "nombreLargo": "Transformación Educativa y Lugares Abiertos para Redes y Encuentros de Saberes",
+    "activo": true,
+    "redondezDefault": 22,
+    "urdimbre": [
+      { "id": "g", "tipo": "guia" },
+      { "id": "c1", "tipo": "contenido", "corto": "1", "nombre": "Hilo 1" },
+      { "id": "c2", "tipo": "contenido", "corto": "2", "nombre": "Hilo 2" },
+      { "id": "c3", "tipo": "contenido", "corto": "3", "nombre": "Hilo 3" },
+      { "id": "c4", "tipo": "contenido", "corto": "4", "nombre": "Hilo 4" },
+      { "id": "c5", "tipo": "contenido", "corto": "5", "nombre": "Hilo 5" },
+      { "id": "c6", "tipo": "contenido", "corto": "6", "nombre": "Hilo 6" }
+    ]
+  },
+
+  "_notaEditorial": "Todo lo marcado con placeholder:true es texto de relleno estructural para que el telar no aparezca vacío, no es contenido real del proyecto. Reemplázalo desde admin.html (rol maestra tejedora) antes del evento. Las 6 celdas de 'agenda_lanzamiento' sí vienen tal cual del documento operativo del Coffee Lab. Las filas 'mesa_01'..'mesa_12' se siembran vacías a propósito: las llenan los hiladores en vivo durante el evento.",
+
+  "pasadas": [
+    {
+      "id": "actores", "index": 1, "tipo": "institucional", "etiquetaCorta": "1",
+      "nombre": "Actores presentes en el proyecto",
+      "nudos": [
+        { "hiloId": "c1", "punto": "solido", "tinte": "#e29f3e", "texto": "Estudiantes de las tres unidades académicas del proyecto.", "placeholder": true },
+        { "hiloId": "c2", "punto": "solido", "tinte": "#85751a", "texto": "Personal no académico de la UMAG.", "placeholder": true },
+        { "hiloId": "c3", "punto": "solido", "tinte": "#bb6f3a", "texto": "Académicas y académicos de las tres unidades del proyecto.", "placeholder": true },
+        { "hiloId": "c4", "punto": "solido", "tinte": "#3a402f", "texto": "Académicas y académicos de otras unidades de la UMAG.", "placeholder": true },
+        { "hiloId": "c5", "punto": "solido", "tinte": "#7a8b6a", "texto": "Instituciones y organizaciones externas de la región.", "placeholder": true },
+        { "hiloId": "c6", "punto": "solido", "tinte": "#5c6350", "texto": "Autoridades e invitados protocolares.", "placeholder": true }
+      ]
+    },
+    {
+      "id": "contexto", "index": 2, "tipo": "institucional", "etiquetaCorta": "2",
+      "nombre": "Contexto del proyecto",
+      "nudos": [
+        { "hiloId": "c1", "punto": "punto", "tinte": "#eeecd6", "matiz": "#85751a", "texto": "Proyecto de la Universidad de Magallanes con financiamiento ANID.", "placeholder": true },
+        { "hiloId": "c2", "punto": "punto", "tinte": "#eeecd6", "matiz": "#85751a", "texto": "Articula tres unidades académicas de la universidad.", "placeholder": true },
+        { "hiloId": "c3", "punto": "punto", "tinte": "#eeecd6", "matiz": "#85751a", "texto": "Horizonte de ejecución a seis años, con evaluación en 2029.", "placeholder": true },
+        { "hiloId": "c4", "punto": "punto", "tinte": "#eeecd6", "matiz": "#85751a", "texto": "Trabaja sobre siete ejes estratégicos.", "placeholder": true },
+        { "hiloId": "c5", "punto": "punto", "tinte": "#eeecd6", "matiz": "#85751a", "texto": "Foco territorial en desafíos propios de Magallanes.", "placeholder": true },
+        { "hiloId": "c6", "punto": "punto", "tinte": "#eeecd6", "matiz": "#85751a", "texto": "Este telar registra en vivo lo que el encuentro de lanzamiento produce.", "placeholder": true }
+      ]
+    },
+    {
+      "id": "eje_A", "index": 3, "tipo": "institucional", "etiquetaCorta": "A", "nombre": "Eje A · Actualización curricular",
+      "nudos": [
+        { "hiloId": "c1", "punto": "esquina", "tinte": "#e29f3e", "matiz": "#fbf0dd", "texto": "Meta 1 del eje de actualización curricular.", "placeholder": true },
+        { "hiloId": "c2", "punto": "esquina", "tinte": "#e29f3e", "matiz": "#fbf0dd", "texto": "Meta 2 del eje de actualización curricular.", "placeholder": true },
+        { "hiloId": "c3", "punto": "esquina", "tinte": "#e29f3e", "matiz": "#fbf0dd", "texto": "Meta 3 del eje de actualización curricular.", "placeholder": true },
+        { "hiloId": "c4", "punto": "esquina", "tinte": "#e29f3e", "matiz": "#fbf0dd", "texto": "Meta 4 del eje de actualización curricular.", "placeholder": true },
+        { "hiloId": "c5", "punto": "esquina", "tinte": "#e29f3e", "matiz": "#fbf0dd", "texto": "Meta 5 del eje de actualización curricular.", "placeholder": true },
+        { "hiloId": "c6", "punto": "esquina", "tinte": "#e29f3e", "matiz": "#fbf0dd", "texto": "Meta 6 del eje de actualización curricular.", "placeholder": true }
+      ]
+    },
+    {
+      "id": "eje_B", "index": 4, "tipo": "institucional", "etiquetaCorta": "B", "nombre": "Eje B · Vinculación con el entorno",
+      "nudos": [
+        { "hiloId": "c1", "punto": "esquina", "tinte": "#85751a", "matiz": "#eeecd6", "texto": "Meta 1 del eje de vinculación con el entorno.", "placeholder": true },
+        { "hiloId": "c2", "punto": "esquina", "tinte": "#85751a", "matiz": "#eeecd6", "texto": "Meta 2 del eje de vinculación con el entorno.", "placeholder": true },
+        { "hiloId": "c3", "punto": "esquina", "tinte": "#85751a", "matiz": "#eeecd6", "texto": "Meta 3 del eje de vinculación con el entorno.", "placeholder": true },
+        { "hiloId": "c4", "punto": "esquina", "tinte": "#85751a", "matiz": "#eeecd6", "texto": "Meta 4 del eje de vinculación con el entorno.", "placeholder": true },
+        { "hiloId": "c5", "punto": "esquina", "tinte": "#85751a", "matiz": "#eeecd6", "texto": "Meta 5 del eje de vinculación con el entorno.", "placeholder": true },
+        { "hiloId": "c6", "punto": "esquina", "tinte": "#85751a", "matiz": "#eeecd6", "texto": "Meta 6 del eje de vinculación con el entorno.", "placeholder": true }
+      ]
+    },
+    {
+      "id": "eje_C", "index": 5, "tipo": "institucional", "etiquetaCorta": "C", "nombre": "Eje C · Participación y liderazgo de mujeres",
+      "nudos": [
+        { "hiloId": "c1", "punto": "esquina", "tinte": "#bb6f3a", "matiz": "#f5e6db", "texto": "Meta 1 del eje de participación y liderazgo de mujeres.", "placeholder": true },
+        { "hiloId": "c2", "punto": "esquina", "tinte": "#bb6f3a", "matiz": "#f5e6db", "texto": "Meta 2 del eje de participación y liderazgo de mujeres.", "placeholder": true },
+        { "hiloId": "c3", "punto": "esquina", "tinte": "#bb6f3a", "matiz": "#f5e6db", "texto": "Meta 3 del eje de participación y liderazgo de mujeres.", "placeholder": true },
+        { "hiloId": "c4", "punto": "esquina", "tinte": "#bb6f3a", "matiz": "#f5e6db", "texto": "Meta 4 del eje de participación y liderazgo de mujeres.", "placeholder": true },
+        { "hiloId": "c5", "punto": "esquina", "tinte": "#bb6f3a", "matiz": "#f5e6db", "texto": "Meta 5 del eje de participación y liderazgo de mujeres.", "placeholder": true },
+        { "hiloId": "c6", "punto": "esquina", "tinte": "#bb6f3a", "matiz": "#f5e6db", "texto": "Meta 6 del eje de participación y liderazgo de mujeres.", "placeholder": true }
+      ]
+    },
+    {
+      "id": "eje_D", "index": 6, "tipo": "institucional", "etiquetaCorta": "D", "nombre": "Eje D · Formación de investigadores y profesionales",
+      "nudos": [
+        { "hiloId": "c1", "punto": "esquina", "tinte": "#3a402f", "matiz": "#c9cdc0", "texto": "Meta 1 del eje de formación de investigadores y profesionales.", "placeholder": true },
+        { "hiloId": "c2", "punto": "esquina", "tinte": "#3a402f", "matiz": "#c9cdc0", "texto": "Meta 2 del eje de formación de investigadores y profesionales.", "placeholder": true },
+        { "hiloId": "c3", "punto": "esquina", "tinte": "#3a402f", "matiz": "#c9cdc0", "texto": "Meta 3 del eje de formación de investigadores y profesionales.", "placeholder": true },
+        { "hiloId": "c4", "punto": "esquina", "tinte": "#3a402f", "matiz": "#c9cdc0", "texto": "Meta 4 del eje de formación de investigadores y profesionales.", "placeholder": true },
+        { "hiloId": "c5", "punto": "esquina", "tinte": "#3a402f", "matiz": "#c9cdc0", "texto": "Meta 5 del eje de formación de investigadores y profesionales.", "placeholder": true },
+        { "hiloId": "c6", "punto": "esquina", "tinte": "#3a402f", "matiz": "#c9cdc0", "texto": "Meta 6 del eje de formación de investigadores y profesionales.", "placeholder": true }
+      ]
+    },
+    {
+      "id": "eje_E", "index": 7, "tipo": "institucional", "etiquetaCorta": "E", "nombre": "Eje E · Gobernanza",
+      "nudos": [
+        { "hiloId": "c1", "punto": "esquina", "tinte": "#7a8b6a", "matiz": "#e7ebe2", "texto": "Meta 1 del eje de gobernanza.", "placeholder": true },
+        { "hiloId": "c2", "punto": "esquina", "tinte": "#7a8b6a", "matiz": "#e7ebe2", "texto": "Meta 2 del eje de gobernanza.", "placeholder": true },
+        { "hiloId": "c3", "punto": "esquina", "tinte": "#7a8b6a", "matiz": "#e7ebe2", "texto": "Meta 3 del eje de gobernanza.", "placeholder": true },
+        { "hiloId": "c4", "punto": "esquina", "tinte": "#7a8b6a", "matiz": "#e7ebe2", "texto": "Meta 4 del eje de gobernanza.", "placeholder": true },
+        { "hiloId": "c5", "punto": "esquina", "tinte": "#7a8b6a", "matiz": "#e7ebe2", "texto": "Meta 5 del eje de gobernanza.", "placeholder": true },
+        { "hiloId": "c6", "punto": "esquina", "tinte": "#7a8b6a", "matiz": "#e7ebe2", "texto": "Meta 6 del eje de gobernanza.", "placeholder": true }
+      ]
+    },
+    {
+      "id": "eje_F", "index": 8, "tipo": "institucional", "etiquetaCorta": "F", "nombre": "Eje F · Ciencia y conocimientos abiertos",
+      "nudos": [
+        { "hiloId": "c1", "punto": "esquina", "tinte": "#e2b563", "matiz": "#fbf0dd", "texto": "Meta 1 del eje de ciencia y conocimientos abiertos.", "placeholder": true },
+        { "hiloId": "c2", "punto": "esquina", "tinte": "#e2b563", "matiz": "#fbf0dd", "texto": "Meta 2 del eje de ciencia y conocimientos abiertos.", "placeholder": true },
+        { "hiloId": "c3", "punto": "esquina", "tinte": "#e2b563", "matiz": "#fbf0dd", "texto": "Meta 3 del eje de ciencia y conocimientos abiertos.", "placeholder": true },
+        { "hiloId": "c4", "punto": "esquina", "tinte": "#e2b563", "matiz": "#fbf0dd", "texto": "Meta 4 del eje de ciencia y conocimientos abiertos.", "placeholder": true },
+        { "hiloId": "c5", "punto": "esquina", "tinte": "#e2b563", "matiz": "#fbf0dd", "texto": "Meta 5 del eje de ciencia y conocimientos abiertos.", "placeholder": true },
+        { "hiloId": "c6", "punto": "esquina", "tinte": "#e2b563", "matiz": "#fbf0dd", "texto": "Meta 6 del eje de ciencia y conocimientos abiertos.", "placeholder": true }
+      ]
+    },
+    {
+      "id": "eje_G", "index": 9, "tipo": "institucional", "etiquetaCorta": "G", "nombre": "Eje G · Sinergias",
+      "nudos": [
+        { "hiloId": "c1", "punto": "esquina", "tinte": "#9a8451", "matiz": "#eeecd6", "texto": "Meta 1 del eje de sinergias.", "placeholder": true },
+        { "hiloId": "c2", "punto": "esquina", "tinte": "#9a8451", "matiz": "#eeecd6", "texto": "Meta 2 del eje de sinergias.", "placeholder": true },
+        { "hiloId": "c3", "punto": "esquina", "tinte": "#9a8451", "matiz": "#eeecd6", "texto": "Meta 3 del eje de sinergias.", "placeholder": true },
+        { "hiloId": "c4", "punto": "esquina", "tinte": "#9a8451", "matiz": "#eeecd6", "texto": "Meta 4 del eje de sinergias.", "placeholder": true },
+        { "hiloId": "c5", "punto": "esquina", "tinte": "#9a8451", "matiz": "#eeecd6", "texto": "Meta 5 del eje de sinergias.", "placeholder": true },
+        { "hiloId": "c6", "punto": "esquina", "tinte": "#9a8451", "matiz": "#eeecd6", "texto": "Meta 6 del eje de sinergias.", "placeholder": true }
+      ]
+    },
+    {
+      "id": "cronograma", "index": 10, "tipo": "institucional", "etiquetaCorta": "10", "nombre": "Cronograma de avance",
+      "nudos": [
+        { "hiloId": "c1", "punto": "diagonal", "tinte": "#f1f0ec", "matiz": "#bb6f3a", "texto": "Hito 1 del cronograma de avance.", "placeholder": true },
+        { "hiloId": "c2", "punto": "diagonal", "tinte": "#f1f0ec", "matiz": "#bb6f3a", "texto": "Hito 2 del cronograma de avance.", "placeholder": true },
+        { "hiloId": "c3", "punto": "diagonal", "tinte": "#f1f0ec", "matiz": "#bb6f3a", "texto": "Hito 3 del cronograma de avance.", "placeholder": true },
+        { "hiloId": "c4", "punto": "diagonal", "tinte": "#f1f0ec", "matiz": "#bb6f3a", "texto": "Hito 4 del cronograma de avance.", "placeholder": true },
+        { "hiloId": "c5", "punto": "diagonal", "tinte": "#f1f0ec", "matiz": "#bb6f3a", "texto": "Hito 5 del cronograma de avance.", "placeholder": true },
+        { "hiloId": "c6", "punto": "diagonal", "tinte": "#f1f0ec", "matiz": "#bb6f3a", "texto": "Hito 6 del cronograma de avance.", "placeholder": true }
+      ]
+    },
+    {
+      "id": "agenda_lanzamiento", "index": 11, "tipo": "institucional", "etiquetaCorta": "11", "nombre": "Agenda del encuentro de lanzamiento",
+      "nudos": [
+        { "hiloId": "c1", "punto": "solido", "tinte": "#85751a", "texto": "Saludo institucional 1." },
+        { "hiloId": "c2", "punto": "solido", "tinte": "#85751a", "texto": "Saludo institucional 2." },
+        { "hiloId": "c3", "punto": "solido", "tinte": "#bb6f3a", "texto": "Presentación musical." },
+        { "hiloId": "c4", "punto": "solido", "tinte": "#e29f3e", "texto": "Presentación del proyecto." },
+        { "hiloId": "c5", "punto": "solido", "tinte": "#3a402f", "texto": "Charla magistral." },
+        { "hiloId": "c6", "punto": "solido", "tinte": "#7a8b6a", "texto": "Preguntas del público." }
+      ]
+    }
+  ],
+
+  "pasadasColaborativas": {
+    "_nota": "12 mesas, se siembran como filas vacías. Columnas 1-2 desafío, 3-4 cambio, 5-6 aporte, fijo por posición.",
+    "cantidad": 12,
+    "prefijoId": "mesa_",
+    "tipo": "colaborativa",
+    "categoriaPorHilo": { "c1": "desafio", "c2": "desafio", "c3": "cambio", "c4": "cambio", "c5": "aporte", "c6": "aporte" },
+    "tintePorCategoria": { "desafio": "#bb6f3a", "cambio": "#e29f3e", "aporte": "#7a8b6a" }
+  }
+}

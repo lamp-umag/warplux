@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>El telar — TELARES UMAG</title>
+<meta name="description" content="Telar digital del proyecto TELARES, Universidad de Magallanes." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+</head>
+<body>
+
+<div class="selvage" id="selvage-top"></div>
+
+<header class="site" style="padding:22px 0 14px">
+  <div class="wrap">
+    <div class="brandline" style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+      <span style="font-family:var(--font-display);font-weight:700;letter-spacing:.22em;font-size:.92rem;color:var(--fg-strong)" id="marca-nombre">TELAR</span>
+      <span style="width:26px;height:2px;background:var(--accent);display:inline-block"></span>
+      <span style="font-family:var(--font-display);font-weight:600;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)" id="marca-kicker">warplux · UMAG</span>
+    </div>
+    <h1 id="titulo-proyecto" style="font-size:clamp(1.9rem,6.2vw,3.1rem);margin:.28em 0 .1em;letter-spacing:-.02em">Cargando…</h1>
+    <p id="lede-proyecto" style="font-family:var(--font-accent);font-size:clamp(1rem,2.6vw,1.16rem);max-width:56ch;color:var(--fg-soft);font-style:italic"></p>
+  </div>
+</header>
+
+<!-- ============ CATÁLOGO (sin ?p=) ============ -->
+<main class="wrap" id="vista-catalogo" hidden>
+  <div class="card" style="max-width:640px">
+    <h2 style="font-size:1rem;margin-bottom:10px">Telares disponibles</h2>
+    <div id="lista-catalogo"></div>
+    <p class="ghost" style="margin-top:14px">Abre uno agregando <code>?p=slug</code> a la URL.</p>
+  </div>
+</main>
+
+<!-- ============ NO ENCONTRADO ============ -->
+<main class="wrap pantalla-estado" id="vista-no-encontrado" hidden>
+  <div class="card">
+    <h2 style="font-size:1.05rem;margin-bottom:8px">No encontramos este telar</h2>
+    <p class="ghost" id="no-encontrado-detalle"></p>
+    <a class="btn" href="index.html" style="margin-top:10px">Ver catálogo</a>
+  </div>
+</main>
+
+<!-- ============ TELAR ============ -->
+<main class="wrap" id="vista-telar" hidden>
+
+  <div id="banner-telares" class="banner-telares" aria-hidden="true"></div>
+
+  <div class="toolbar" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin:10px 0 10px;padding-top:14px;border-top:1px solid var(--line)">
+    <div class="tabs" role="tablist" aria-label="Vistas del telar">
+      <button class="tab" role="tab" aria-selected="true" data-vista="telar">Telar</button>
+      <button class="tab" role="tab" aria-selected="false" data-vista="hilos">Hilos</button>
+    </div>
+    <div id="filtros" style="display:flex;gap:6px;flex-wrap:wrap;align-items:center"></div>
+  </div>
+
+  <section id="panel-telar">
+    <div class="stage">
+      <div class="telar">
+        <div id="telar-cabecera" class="telar-cabecera"></div>
+        <div id="telar-cuerpo"></div>
+        <div class="telar-pie">
+          <span class="hint" id="pie-hint">Toca un nudo para leer lo que dice.</span>
+          <span class="hint" id="pie-conteo"></span>
+        </div>
+      </div>
+
+      <aside class="panel" id="panel-lectura" aria-live="polite">
+        <button class="panel-cerrar" id="panel-cerrar" aria-label="Cerrar">×</button>
+        <div id="panel-body"></div>
+      </aside>
+
+      <div class="lado">
+        <div class="leyenda">
+          <div>
+            <h3>Cómo leer el telar</h3>
+            <p class="estado-vacio">Cada fila es una pasada: lo institucional arriba, lo que se teje en vivo abajo. Cada nudo es un aporte. Toca uno para abrirlo.</p>
+          </div>
+          <div id="leyenda-tintes">
+            <h3>Colores en uso</h3>
+            <ul id="leyenda-lista" style="list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 18px"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="panel-hilos" hidden>
+    <div class="telar-pie" style="margin:0 0 14px">
+      <span class="hint" id="hilos-conteo"></span>
+    </div>
+    <div id="lista-hilos" style="display:grid;gap:10px;grid-template-columns:1fr"></div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <h3>Este telar es también un conjunto de datos</h3>
+    <p>Los aportes quedan publicados sin nombres. Si algo tuyo aparece acá y quieres que se retire, escribe a
+      <a href="mailto:contacto@telares.umag.cl">contacto@telares.umag.cl</a>. warplux — weaving aesthetic records of processes with a lightweight user experience.</p>
+    <p class="ghost"><a href="admin.html" style="color:rgba(241,240,236,.6)">Acceso urdidores / tejedoras</a></p>
+  </div>
+</footer>
+
+<script type="module" src="js/viewer.js"></script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+/* =========================================================
+   warplux — sistema de diseño compartido
+   Tokens tomados de los prototipos en background/. Mobile-first:
+   todo el CSS base es para pantalla angosta, min-width agranda.
+   ========================================================= */
+
+:root{
+  --cream:#f1f0ec; --cream-soft:#f8f7f3; --white:#fff;
+  --ink:#3a402f; --ink-strong:#262b1d; --ink-deep:#1c2015; --ink-soft:#5c6350;
+  --gold:#e29f3e; --olive:#85751a; --terracotta:#bb6f3a; --lichen:#7a8b6a;
+  --gold-tint:#fbf0dd; --olive-tint:#eeecd6; --terracotta-tint:#f5e6db; --lichen-tint:#e7ebe2;
+
+  --bg:var(--cream); --bg-soft:var(--cream-soft); --surface:var(--white);
+  --fg:var(--ink); --fg-strong:var(--ink-strong); --fg-soft:var(--ink-soft);
+  --line:rgba(58,64,47,.12); --line-strong:rgba(58,64,47,.22);
+  --accent:var(--terracotta);
+
+  --font-display:"Poppins","Segoe UI",sans-serif;
+  --font-body:"Inter","Segoe UI",sans-serif;
+  --font-accent:"Lora",Georgia,serif;
+
+  --radius-s:8px; --radius-m:14px; --radius-l:24px;
+  --dur:.2s; --ease:cubic-bezier(.4,0,.2,1);
+}
+
+/* tema oscuro (taller / admin) — se activa con data-tema="taller" en <body> */
+[data-tema="taller"]{
+  --bg:var(--ink-deep); --bg-soft:#20241a; --surface:#262b1d;
+  --fg:var(--cream); --fg-strong:#fff; --fg-soft:rgba(241,240,236,.6);
+  --line:rgba(241,240,236,.14); --line-strong:rgba(241,240,236,.26);
+  --accent:var(--gold);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);
+  font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  transition:background var(--dur) var(--ease),color var(--dur) var(--ease)}
+h1,h2,h3{font-family:var(--font-display);margin:0;line-height:1.15;color:var(--fg-strong)}
+p{margin:0 0 .8em}
+button{font:inherit;cursor:pointer;color:inherit;background:none;border:0}
+a{color:var(--accent)}
+img,svg{max-width:100%}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+[hidden]{display:none !important}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important;transition-duration:.01ms !important}}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px}
+@media(min-width:820px){.wrap{padding:0 28px}}
+
+/* ---------- selvage / orillo decorativo ---------- */
+.selvage{height:10px;width:100%;display:block}
+
+/* ---------- botones y chips genéricos ---------- */
+.btn{border:1px solid var(--line-strong);background:transparent;color:var(--fg);
+  border-radius:999px;padding:9px 18px;font-family:var(--font-display);font-weight:600;
+  font-size:.82rem;transition:all var(--dur) var(--ease);display:inline-flex;align-items:center;gap:8px}
+.btn:hover{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--white)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{border-style:dashed}
+.btn[disabled]{opacity:.5;cursor:default;pointer-events:none}
+
+.chip{border:1px solid var(--line-strong);background:transparent;border-radius:999px;
+  padding:5px 12px;font-size:.78rem;color:var(--fg-soft);display:inline-flex;align-items:center;gap:7px}
+.chip .swatch{width:10px;height:10px;border-radius:2px;transform:rotate(45deg)}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.chip.reset{border-style:dashed}
+
+.tag{font-size:.7rem;border-radius:999px;padding:3px 10px;background:var(--bg-soft);
+  color:var(--fg-soft);border:1px solid var(--line)}
+.tag.solid{color:var(--white);border-color:transparent}
+
+.notice{background:var(--gold-tint);border:1px solid rgba(226,159,62,.45);border-radius:var(--radius-s);
+  padding:11px 14px;font-size:.8rem;margin-bottom:18px;color:var(--ink)}
+[data-tema="taller"] .notice{background:rgba(226,159,62,.14);color:var(--cream);border-color:rgba(226,159,62,.4)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-m);padding:16px}
+
+/* ---------- tabs ---------- */
+.tabs{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px;flex-wrap:wrap}
+.tab{border:0;background:transparent;padding:7px 16px;border-radius:999px;font-family:var(--font-display);
+  font-weight:600;font-size:.84rem;color:var(--fg-soft)}
+.tab[aria-selected="true"]{background:var(--fg);color:var(--bg)}
+
+/* ---------- forms ---------- */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;
+  font-weight:600;color:var(--fg-soft);margin-bottom:5px}
+.field select,.field textarea,.field input{width:100%;font:inherit;padding:9px 11px;
+  border:1px solid var(--line-strong);border-radius:var(--radius-s);background:var(--bg-soft);color:var(--fg)}
+.field textarea{min-height:88px;resize:vertical;font-family:var(--font-accent)}
+.pair{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:560px){.pair{grid-template-columns:1fr 1fr}}
+.counterchar{font-size:.7rem;color:var(--fg-soft);text-align:right}
+
+/* ---------- LA URDIMBRE: grilla compartida del telar ---------- */
+/* 1 columna guía + 6 columnas de contenido = 7 hilos, como TELARES */
+.telar{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-m);
+  padding:10px 8px 14px;overflow:hidden}
+@media(min-width:820px){.telar{padding:14px 14px 18px}}
+
+.banner-telares,.telar-cabecera,.pasada{display:grid;
+  grid-template-columns:26px repeat(6,minmax(0,1fr));gap:2px}
+@media(min-width:560px){.banner-telares,.telar-cabecera,.pasada{grid-template-columns:40px repeat(6,minmax(0,1fr));gap:3px}}
+
+.banner-telares{margin-bottom:8px}
+.banner-letra{aspect-ratio:1/1;border-radius:4px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-weight:700;color:var(--white);font-size:clamp(.85rem,3vw,1.3rem);
+  position:relative;overflow:hidden}
+
+.telar-cabecera{margin-bottom:5px;align-items:end}
+.hilo-cabecera{text-align:center;padding:2px 1px 5px;cursor:pointer;background:transparent;
+  border:0;border-bottom:2px solid transparent;font-family:var(--font-display)}
+.hilo-cabecera .letra{font-weight:700;font-size:.72rem;color:var(--fg-strong);display:block}
+.hilo-cabecera .nombre{display:none;font-size:.6rem;color:var(--fg-soft);line-height:1.2}
+@media(min-width:560px){.hilo-cabecera .nombre{display:block}}
+.hilo-cabecera[aria-pressed="true"]{border-bottom-color:var(--accent)}
+.esquina-corner{font-size:.56rem;color:var(--fg-soft);text-align:center;padding-bottom:6px}
+
+.pasada-etiqueta{display:flex;align-items:center;justify-content:flex-end;padding-right:5px;
+  font-size:.6rem;color:var(--fg-soft);letter-spacing:.02em;text-align:right}
+@media(min-width:560px){.pasada-etiqueta{font-size:.66rem}}
+
+.nudo{position:relative;aspect-ratio:1/1;border:0;padding:0;background:transparent;display:block;
+  overflow:hidden;border-radius:3px;transition:transform var(--dur) var(--ease)}
+.nudo .fondo{position:absolute;inset:0}
+.nudo:hover,.nudo:focus-visible{transform:scale(1.08);z-index:3}
+.nudo.activo{transform:scale(1.08);z-index:3;box-shadow:0 0 0 2px var(--fg-strong)}
+.nudo.vacio{cursor:default}
+.nudo.vacio:hover{transform:none}
+.nudo.atenuado{opacity:.28;filter:grayscale(.4)}
+.racimo-badge{position:absolute;top:2px;right:2px;background:var(--fg-strong);color:var(--bg);
+  font-size:.55rem;line-height:1;border-radius:999px;padding:2px 4px;font-family:var(--font-display);z-index:2}
+@keyframes brotar{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:scale(1)}}
+.nudo.recien-tejido{animation:brotar .5s var(--ease) both}
+
+.telar-pie{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}
+.hint{font-size:.72rem;color:var(--fg-soft)}
+
+/* ---------- panel de detalle / hoja móvil ---------- */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-m);padding:18px}
+@media(min-width:980px){.panel{position:sticky;top:18px}}
+@media(max-width:979px){
+  .panel{position:fixed;left:0;right:0;bottom:0;z-index:40;border-radius:var(--radius-l) var(--radius-l) 0 0;
+    box-shadow:0 -18px 45px -12px rgba(0,0,0,.4);transform:translateY(102%);
+    transition:transform .3s var(--ease);max-height:74vh;overflow:auto;padding-bottom:26px}
+  .panel.abierto{transform:translateY(0)}
+  .panel::before{content:"";display:block;width:42px;height:4px;border-radius:2px;
+    background:var(--line-strong);margin:0 auto 14px}
+}
+.panel-cerrar{display:none}
+@media(max-width:979px){.panel-cerrar{display:inline-block;position:absolute;top:14px;right:14px;
+  font-size:1.3rem;line-height:1;color:var(--fg-soft)}}
+.panel .eyebrow{font-family:var(--font-display);font-weight:600;font-size:.66rem;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:8px}
+.panel .cita{font-family:var(--font-accent);font-size:1.06rem;line-height:1.45;color:var(--fg-strong);margin:0 0 14px}
+.panel .meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.panel dl{margin:0;font-size:.8rem;color:var(--fg-soft)}
+.panel dt{font-weight:600;color:var(--fg);float:left;margin-right:6px}
+.panel dd{margin:0 0 5px}
+.estado-vacio{color:var(--fg-soft);font-size:.86rem}
+
+.stage{display:grid;gap:22px;grid-template-columns:1fr;align-items:start;margin-top:6px}
+@media(min-width:980px){.stage{grid-template-columns:minmax(0,540px) minmax(0,1fr)}
+  .stage > .panel{grid-column:2;grid-row:1}
+  .stage > .lado{grid-column:2;grid-row:2;align-self:start}
+  .stage > .telar{grid-column:1;grid-row:1 / span 2}}
+
+/* ---------- leyenda ---------- */
+.leyenda{margin:22px 0 0;display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:700px){.leyenda{grid-template-columns:1fr 1fr}}
+.leyenda h3{font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;color:var(--fg-soft);margin-bottom:10px}
+.leyenda ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 18px}
+.leyenda li{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--fg)}
+
+/* ---------- footer ---------- */
+footer.site{margin-top:44px;background:var(--ink);color:var(--cream);padding:30px 0 34px}
+footer.site h3{color:var(--cream);font-size:.95rem;margin-bottom:8px}
+footer.site p{font-size:.8rem;color:rgba(241,240,236,.72);max-width:62ch}
+footer.site a{color:var(--gold)}
+.ghost{color:var(--fg-soft);font-size:.72rem}
+
+/* ---------- estado de acceso / carga ---------- */
+.pantalla-estado{min-height:60vh;display:flex;align-items:center;justify-content:center;padding:30px 16px;text-align:center}
+.pantalla-estado .card{max-width:420px}

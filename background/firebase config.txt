@@ -1,0 +1,19 @@
+
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCQiq3vIUA_ZqpOCOcXmraQXIhwEz4JVLY",
+  authDomain: "warplux-a839b.firebaseapp.com",
+  projectId: "warplux-a839b",
+  storageBucket: "warplux-a839b.firebasestorage.app",
+  messagingSenderId: "164221122848",
+  appId: "1:164221122848:web:f8c6cf3f2c5455cf60ff45"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
