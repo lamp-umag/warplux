@@ -1,0 +1,118 @@
+{
+  "_notaEditorial": "Este es un telar de EJEMPLO ('sample'), para mostrar cómo se ve un telar en marcha. No es el telar real de TELARES: ese lo configura la maestra tejedora desde cero en admin.html.",
+
+  "proyecto": {
+    "slug": "sample",
+    "nombre": "Sample",
+    "nombreLargo": "Telar de ejemplo — así se ve un telar de warplux ya en marcha.",
+    "activo": true,
+    "columnas": 6,
+    "redondezExterior": 16,
+    "redondezInterior": 14,
+    "espacioNudos": 3,
+    "filasPrevistas": 6,
+    "filasHiladorMax": 20,
+    "urdimbre": [
+      { "id": "g", "tipo": "guia" },
+      { "id": "c1", "tipo": "contenido", "corto": "1", "nombre": "Hilo 1" },
+      { "id": "c2", "tipo": "contenido", "corto": "2", "nombre": "Hilo 2" },
+      { "id": "c3", "tipo": "contenido", "corto": "3", "nombre": "Hilo 3" },
+      { "id": "c4", "tipo": "contenido", "corto": "4", "nombre": "Hilo 4" },
+      { "id": "c5", "tipo": "contenido", "corto": "5", "nombre": "Hilo 5" },
+      { "id": "c6", "tipo": "contenido", "corto": "6", "nombre": "Hilo 6" }
+    ],
+    "formularioMesa": {
+      "preguntas": [
+        "¿Qué problema importante en Magallanes no se resuelve con el trabajo de una sola carrera, y requiere una mirada interdisciplinaria?",
+        "En 3 años más, con el proyecto avanzado en su ejecución ¿qué debería existir en la UMAG que no existe hoy?",
+        "¿Qué puedo aportar yo, o el grupo o institución que represento?"
+      ],
+      "categoriaPorHilo": { "c1": "desafio", "c2": "desafio", "c3": "cambio", "c4": "cambio", "c5": "aporte", "c6": "aporte" },
+      "categoriaLabel": { "desafio": "Desafío", "cambio": "Cambio", "aporte": "Aporte" },
+      "tintePorCategoria": { "desafio": "#bb6f3a", "cambio": "#e29f3e", "aporte": "#7a8b6a" },
+      "composicionPreguntas": [
+        { "id": "estudiantes_psicologia", "label": "¿Había estudiantes de Psicología?" },
+        { "id": "estudiantes_trabajo_social", "label": "¿Había estudiantes de Trabajo Social?" },
+        { "id": "estudiantes_derecho", "label": "¿Había estudiantes de Derecho?" },
+        { "id": "academicos_tres_unidades", "label": "¿Había académicos/as de esas tres unidades?" },
+        { "id": "otras_unidades_umag", "label": "¿Había estudiantes o académicos/as de otras unidades de la UMAG?" },
+        { "id": "otros_actores_universidad", "label": "¿Había otros actores de la universidad (no académicos)?" },
+        { "id": "actor_externo", "label": "¿Había algún actor externo a la UMAG?" },
+        { "id": "otro", "label": "¿Había alguien más que no calce en lo anterior?" }
+      ]
+    }
+  },
+
+  "pasadas": [
+    {
+      "id": "actores", "index": 1, "tipo": "institucional", "etiquetaCorta": "1",
+      "nombre": "Actores presentes en el proyecto",
+      "nudos": [
+        { "hiloId": "c1", "punto": "solido", "tinte": "#e29f3e", "titulo": "Estudiantes", "texto": "Estudiantes de las tres unidades académicas del proyecto." },
+        { "hiloId": "c2", "punto": "solido", "tinte": "#85751a", "titulo": "Personal", "texto": "Personal no académico de la UMAG." },
+        { "hiloId": "c3", "punto": "solido", "tinte": "#bb6f3a", "titulo": "Académicos", "texto": "Académicas y académicos de las tres unidades del proyecto." },
+        { "hiloId": "c4", "punto": "solido", "tinte": "#3a402f", "titulo": "Otras unidades", "texto": "Académicas y académicos de otras unidades de la UMAG." },
+        { "hiloId": "c5", "punto": "solido", "tinte": "#7a8b6a", "titulo": "Externos", "texto": "Instituciones y organizaciones externas de la región." },
+        { "hiloId": "c6", "punto": "solido", "tinte": "#5c6350", "titulo": "Autoridades", "texto": "Autoridades e invitados protocolares." }
+      ]
+    },
+    {
+      "id": "contexto", "index": 2, "tipo": "institucional", "etiquetaCorta": "2",
+      "nombre": "Contexto del proyecto",
+      "nudos": [
+        { "hiloId": "c1", "punto": "punto", "tinte": "#eeecd6", "matiz": "#85751a", "texto": "Proyecto con financiamiento ANID." },
+        { "hiloId": "c2", "punto": "punto", "tinte": "#eeecd6", "matiz": "#85751a", "texto": "Articula tres unidades académicas." },
+        { "hiloId": "c3", "punto": "punto", "tinte": "#eeecd6", "matiz": "#85751a", "texto": "Horizonte de ejecución a seis años." },
+        { "hiloId": "c4", "punto": "punto", "tinte": "#eeecd6", "matiz": "#85751a", "texto": "Trabaja sobre varios ejes estratégicos." },
+        { "hiloId": "c5", "punto": "punto", "tinte": "#eeecd6", "matiz": "#85751a", "texto": "Foco territorial en Magallanes." },
+        { "hiloId": "c6", "punto": "punto", "tinte": "#eeecd6", "matiz": "#85751a", "texto": "Este telar registra en vivo lo que un encuentro produce." }
+      ]
+    },
+    {
+      "id": "eje_A", "index": 3, "tipo": "institucional", "etiquetaCorta": "A", "nombre": "Eje A · ejemplo",
+      "nudos": [
+        { "hiloId": "c1", "punto": "esquina", "tinte": "#e29f3e", "matiz": "#fbf0dd", "texto": "Meta 1 de ejemplo." },
+        { "hiloId": "c2", "punto": "esquina", "tinte": "#e29f3e", "matiz": "#fbf0dd", "texto": "Meta 2 de ejemplo." },
+        { "hiloId": "c3", "punto": "esquina", "tinte": "#e29f3e", "matiz": "#fbf0dd", "texto": "Meta 3 de ejemplo." },
+        { "hiloId": "c4", "punto": "esquina", "tinte": "#e29f3e", "matiz": "#fbf0dd", "texto": "Meta 4 de ejemplo." },
+        { "hiloId": "c5", "punto": "esquina", "tinte": "#e29f3e", "matiz": "#fbf0dd", "texto": "Meta 5 de ejemplo." },
+        { "hiloId": "c6", "punto": "esquina", "tinte": "#e29f3e", "matiz": "#fbf0dd", "texto": "Meta 6 de ejemplo." }
+      ]
+    },
+    {
+      "id": "agenda_lanzamiento", "index": 4, "tipo": "institucional", "etiquetaCorta": "4", "nombre": "Agenda de un encuentro de lanzamiento",
+      "nudos": [
+        { "hiloId": "c1", "punto": "solido", "tinte": "#85751a", "texto": "Saludo institucional 1." },
+        { "hiloId": "c2", "punto": "solido", "tinte": "#85751a", "texto": "Saludo institucional 2." },
+        { "hiloId": "c3", "punto": "solido", "tinte": "#bb6f3a", "texto": "Presentación musical." },
+        { "hiloId": "c4", "punto": "solido", "tinte": "#e29f3e", "texto": "Presentación del proyecto." },
+        { "hiloId": "c5", "punto": "solido", "tinte": "#3a402f", "texto": "Charla magistral." },
+        { "hiloId": "c6", "punto": "solido", "tinte": "#7a8b6a", "texto": "Preguntas del público." }
+      ]
+    },
+    {
+      "id": "mesa_01", "index": 5, "tipo": "colaborativa", "etiquetaCorta": "M1", "nombre": "Mesa 1",
+      "composicion": { "estudiantes_psicologia": true, "estudiantes_trabajo_social": false, "estudiantes_derecho": false, "academicos_tres_unidades": false, "otras_unidades_umag": false, "otros_actores_universidad": false, "actor_externo": false, "otro": false },
+      "nudos": [
+        { "hiloId": "c1", "punto": "diagonal", "tinte": "#bb6f3a", "matiz": "#e29f3e", "giro": 0, "espejo": false, "texto": "La salud mental no la resuelve una sola disciplina." },
+        { "hiloId": "c2", "punto": "diagonal", "tinte": "#bb6f3a", "matiz": "#e29f3e", "giro": 0, "espejo": false, "texto": "Faltan datos compartidos entre servicios." },
+        { "hiloId": "c3", "punto": "diagonal", "tinte": "#e29f3e", "matiz": "#e29f3e", "giro": 180, "espejo": false, "texto": "Prácticas profesionales conjuntas entre carreras." },
+        { "hiloId": "c4", "punto": "diagonal", "tinte": "#e29f3e", "matiz": "#e29f3e", "giro": 180, "espejo": false, "texto": "Un ramo interdisciplinario real, no solo de nombre." },
+        { "hiloId": "c5", "punto": "diagonal", "tinte": "#7a8b6a", "matiz": "#e29f3e", "giro": 0, "espejo": true, "texto": "Podemos abrir convenios con municipios rurales." },
+        { "hiloId": "c6", "punto": "diagonal", "tinte": "#7a8b6a", "matiz": "#e29f3e", "giro": 0, "espejo": true, "texto": "Ofrecemos horas de práctica supervisada." }
+      ]
+    },
+    {
+      "id": "mesa_02", "index": 6, "tipo": "colaborativa", "etiquetaCorta": "M2", "nombre": "Mesa 2",
+      "composicion": { "estudiantes_psicologia": true, "estudiantes_trabajo_social": true, "estudiantes_derecho": true, "academicos_tres_unidades": true, "otras_unidades_umag": true, "otros_actores_universidad": false, "actor_externo": true, "otro": false },
+      "nudos": [
+        { "hiloId": "c1", "punto": "punto", "tinte": "#bb6f3a", "matiz": "#bb6f3a", "acento": "#3a402f", "giro": 0, "espejo": false, "texto": "El proyecto habla con la universidad, no con el territorio." },
+        { "hiloId": "c2", "punto": "punto", "tinte": "#bb6f3a", "matiz": "#bb6f3a", "acento": "#3a402f", "giro": 0, "espejo": false, "texto": "Falta un lugar único donde ver todo lo que ya existe." },
+        { "hiloId": "c3", "punto": "punto", "tinte": "#e29f3e", "matiz": "#bb6f3a", "acento": "#3a402f", "giro": 180, "espejo": false, "texto": "Cruzar esto con lo que ya hacen otras iniciativas." },
+        { "hiloId": "c4", "punto": "punto", "tinte": "#e29f3e", "matiz": "#bb6f3a", "acento": "#3a402f", "giro": 180, "espejo": false, "texto": "Un tablero público de todos los proyectos institucionales." },
+        { "hiloId": "c5", "punto": "punto", "tinte": "#7a8b6a", "matiz": "#bb6f3a", "acento": "#3a402f", "giro": 0, "espejo": true, "texto": "Podemos coordinar con la Seremi con frecuencia fija." },
+        { "hiloId": "c6", "punto": "punto", "tinte": "#7a8b6a", "matiz": "#bb6f3a", "acento": "#3a402f", "giro": 0, "espejo": true, "texto": "Nuestra fundación pone el espacio si la UMAG pone horas." }
+      ]
+    }
+  ]
+}

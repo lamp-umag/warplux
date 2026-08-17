@@ -1,13 +1,15 @@
-import { dibujarNudo } from "./motifs.js";
+import { dibujarNudo, APARIENCIA_DEFECTO } from "./motifs.js";
 
 /* =========================================================
    telarCore.js — render compartido del telar.
    Usado tanto por index.html (lectura pública) como por
    admin.html (edición). No toca Firestore directamente:
    recibe datos ya resueltos y devuelve/inserta HTML.
+   El número de columnas y el espacio entre nudos son
+   propiedades del telar (proyecto), no una constante fija.
    ========================================================= */
 
-var PALETA_BANNER = ["#e29f3e", "#85751a", "#bb6f3a", "#3a402f", "#7a8b6a", "#e29f3e", "#85751a"];
+var GRID_GUIA = "minmax(24px,40px)";
 
 /** agrupa nudos de una pasada por hiloId (soporta racimo: >1 nudo por hilo) */
 export function agruparPorHilo(nudos) {
@@ -19,30 +21,26 @@ export function agruparPorHilo(nudos) {
   return m;
 }
 
-/** urdimbre estándar: 1 hilo guía + 6 hilos de contenido, ids g,1..6 */
-export function urdimbreEstandar() {
+/** urdimbre de un telar: 1 hilo guía + N hilos de contenido, ids g,c1..cN */
+export function construirUrdimbre(columnas) {
   var hilos = [{ id: "g", tipo: "guia" }];
-  for (var i = 1; i <= 6; i++) hilos.push({ id: "c" + i, tipo: "contenido" });
+  for (var i = 1; i <= columnas; i++) hilos.push({ id: "c" + i, tipo: "contenido", corto: String(i) });
   return hilos;
 }
 
-/** banda decorativa con el nombre del proyecto (por defecto "TELARES"), no es una pasada real */
-export function renderBanner(el, texto) {
-  var letras = (texto || "TELARES").split("");
-  var html = "";
-  for (var i = 0; i < 7; i++) {
-    var letra = letras[i] || "";
-    var color = PALETA_BANNER[i % PALETA_BANNER.length];
-    html += '<div class="banner-letra" style="background:' + color + '">' + letra + "</div>";
-  }
-  el.innerHTML = html;
+function fijarGrid(el, hilosContenido, espacioNudos) {
+  el.style.display = "grid";
+  el.style.gridTemplateColumns = GRID_GUIA + " repeat(" + hilosContenido.length + ", minmax(0,1fr))";
+  el.style.gap = (typeof espacioNudos === "number" ? espacioNudos : APARIENCIA_DEFECTO.espacioNudos) + "px";
 }
 
-/** cabecera de hilos (columna guía + 6 columnas de contenido) */
+/** cabecera de hilos (columna guía + columnas de contenido) */
 export function renderCabecera(el, hilos, opts) {
   opts = opts || {};
+  var hilosContenido = hilos.filter(function (h) { return h.tipo === "contenido"; });
+  fijarGrid(el, hilosContenido, opts.espacioNudos);
   var html = '<div class="esquina-corner">' + (opts.corner || "") + "</div>";
-  hilos.filter(function (h) { return h.tipo === "contenido"; }).forEach(function (h) {
+  hilosContenido.forEach(function (h) {
     html += '<button class="hilo-cabecera" data-hilo="' + h.id + '" aria-pressed="' +
       (opts.hiloActivo === h.id ? "true" : "false") + '" title="' + (h.nombre || "") + '">' +
       '<span class="letra">' + (h.corto || h.id) + '</span>' +
@@ -58,26 +56,29 @@ export function renderCabecera(el, hilos, opts) {
 
 /**
  * cuerpo del telar. pasadas: [{id, etiquetaCorta, ...}], nudosPorPasada: {pasadaId: [nudo,...]}
- * opts: { hilos, onNudoClick(nudo, pasada, hiloId, todos), onNudoHover, esVisible(nudo), esReciente(nudo), vacioFn(pasada,hiloId) }
+ * opts: { hilos, apariencia, onNudoClick(nudo, pasada, hiloId, todos), onNudoHover,
+ *         esVisible(nudo), esReciente(nudo), vacioFn(pasada,hiloId), vacioInteractivo }
  */
 export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
   opts = opts || {};
-  var hilosContenido = (opts.hilos || urdimbreEstandar()).filter(function (h) { return h.tipo === "contenido"; });
+  var hilosContenido = (opts.hilos || []).filter(function (h) { return h.tipo === "contenido"; });
+  var apariencia = opts.apariencia || APARIENCIA_DEFECTO;
   var html = "";
   pasadas.forEach(function (pasada) {
     var grupos = agruparPorHilo(nudosPorPasada[pasada.id] || []);
-    html += '<div class="pasada" data-pasada="' + pasada.id + '">';
+    html += '<div class="pasada" data-pasada="' + pasada.id + '" style="grid-template-columns:' +
+      GRID_GUIA + " repeat(" + hilosContenido.length + ',minmax(0,1fr));gap:' + apariencia.espacioNudos + 'px">';
     html += '<div class="pasada-etiqueta">' + (pasada.etiquetaCorta || "") + "</div>";
     hilosContenido.forEach(function (hilo) {
       var lista = (grupos[hilo.id] || []).filter(function (n) {
         return opts.soloTejido ? n.estado === "tejido" : true;
       });
       if (!lista.length) {
-        var vacioNudo = (opts.vacioFn && opts.vacioFn(pasada, hilo.id)) || { punto: "vacio", tinte: "#e7ebe2", redondez: 8 };
+        var vacioNudo = (opts.vacioFn && opts.vacioFn(pasada, hilo.id)) || { punto: "vacio", tinte: "#e7ebe2" };
         var interactivo = opts.vacioInteractivo;
         html += '<button class="nudo vacio" data-pasada="' + pasada.id + '" data-hilo="' + hilo.id +
           '"' + (interactivo ? "" : ' tabindex="-1" aria-hidden="true"') + '>' +
-          '<span class="fondo"></span>' + dibujarNudo(vacioNudo) + "</button>";
+          '<span class="fondo"></span>' + dibujarNudo(vacioNudo, apariencia) + "</button>";
         return;
       }
       var principal = lista[0];
@@ -85,7 +86,7 @@ export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
       var atenuado = opts.esVisible && !lista.some(opts.esVisible) ? " atenuado" : "";
       html += '<button class="nudo' + reciente + atenuado + '" data-pasada="' + pasada.id +
         '" data-hilo="' + hilo.id + '" aria-label="' + (lista.length > 1 ? lista.length + " aportes" : "un aporte") + '">' +
-        dibujarNudo(principal) +
+        dibujarNudo(principal, apariencia) +
         (lista.length > 1 ? '<span class="racimo-badge">' + lista.length + "</span>" : "") +
         "</button>";
     });

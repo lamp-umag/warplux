@@ -8,16 +8,18 @@ import {
 
 /* =========================================================
    Roles del telar, siguiendo el léxico:
-   maestra_tejedora > urdidor > tejedor > hilador > visitante
+   maestra_tejedora > urdidor > tejedor > hilador
+   (no existe rol "visitante": quien no tiene rol asignado
+   simplemente no entra al taller; el telar público no
+   requiere rol ni sesión)
    ========================================================= */
-export var ROLES = ["maestra_tejedora", "urdidor", "tejedor", "hilador", "visitante"];
+export var ROLES = ["maestra_tejedora", "urdidor", "tejedor", "hilador"];
 
 export var ROL_LABEL = {
   maestra_tejedora: "Maestra tejedora",
   urdidor: "Urdidor/a",
   tejedor: "Tejedor/a",
-  hilador: "Hilador/a",
-  visitante: "Visitante"
+  hilador: "Hilador/a"
 };
 
 // Bootstrap: mientras usuarios_roles esté vacío, este correo siempre entra
@@ -46,19 +48,19 @@ export function signOutUser() {
  * Resuelve el perfil del usuario actual: rol real (desde usuarios_roles,
  * con bootstrap para la maestra) y rol efectivo (aplica el "ver como" si
  * la maestra lo activó para probar la interfaz de otro rol).
+ * rolReal/rolEfectivo son null cuando la cuenta no tiene rol asignado.
  */
 export async function resolverPerfil(user) {
   if (!user || !user.email) {
-    return { user: null, email: null, nombre: null, rolReal: "visitante", rolEfectivo: "visitante", alcance: {} };
+    return { user: null, email: null, nombre: null, rolReal: null, rolEfectivo: null };
   }
   var email = user.email.toLowerCase();
   var ref = doc(db, "usuarios_roles", email);
   var snap = await getDoc(ref);
-  var rolReal, alcance = {};
+  var rolReal = null;
 
   if (snap.exists()) {
-    rolReal = snap.data().rol || "visitante";
-    alcance = snap.data().proyectosAlcance || {};
+    rolReal = snap.data().rol || null;
   } else if (email === MAESTRA_BOOTSTRAP) {
     rolReal = "maestra_tejedora";
     // Deja registro persistente apenas la maestra bootstrap entra la primera vez.
@@ -66,12 +68,9 @@ export async function resolverPerfil(user) {
       await setDoc(ref, {
         rol: "maestra_tejedora",
         nombre: user.displayName || email,
-        proyectosAlcance: {},
         creadoEn: new Date().toISOString()
       });
     } catch (e) { /* si las reglas ya están cerradas, no pasa nada grave */ }
-  } else {
-    rolReal = "visitante";
   }
 
   var verComo = rolReal === "maestra_tejedora" ? getVerComo() : null;
@@ -80,7 +79,7 @@ export async function resolverPerfil(user) {
   return {
     user: user, email: email,
     nombre: (snap.exists() && snap.data().nombre) || user.displayName || email,
-    rolReal: rolReal, rolEfectivo: rolEfectivo, alcance: alcance
+    rolReal: rolReal, rolEfectivo: rolEfectivo
   };
 }
 

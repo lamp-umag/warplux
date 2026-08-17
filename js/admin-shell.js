@@ -36,7 +36,7 @@ async function enrutar(perfil) {
   perfilActual = perfil;
   if (!perfil.user) { mostrarSolo("vista-login"); return; }
 
-  if (perfil.rolEfectivo === "visitante") {
+  if (!perfil.rolEfectivo) {
     mostrarSolo("vista-sin-acceso");
     return;
   }

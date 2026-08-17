@@ -15,49 +15,61 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/usuarios_roles/$(emailActual()));
     }
 
+    function tieneRol() {
+      return request.auth != null && exists(/databases/$(database)/documents/usuarios_roles/$(emailActual()));
+    }
+
     function rolActual() {
-      return request.auth != null && filaUsuario() != null ? filaUsuario().data.rol : 'visitante';
+      return tieneRol() ? filaUsuario().data.rol : null;
     }
 
     function esMaestra() {
-      return request.auth != null && rolActual() == 'maestra_tejedora';
+      return rolActual() == 'maestra_tejedora';
     }
 
     function esTejedora() {
-      return request.auth != null && (rolActual() == 'tejedor' || esMaestra());
+      return rolActual() == 'tejedor' || esMaestra();
     }
 
     function esUrdidora() {
-      return request.auth != null && (rolActual() == 'urdidor' || esMaestra());
+      return rolActual() == 'urdidor' || esMaestra();
     }
 
-    function esHiladoraDe(proyectoId, pasadaId) {
-      return request.auth != null && (
-        esTejedora() ||
-        (rolActual() == 'hilador' &&
-         filaUsuario().data.proyectosAlcance[proyectoId].pasadaId == pasadaId)
-      );
+    function esHiladora() {
+      // sin alcance por mesa: cualquier hilador puede elegir o crear su mesa
+      return rolActual() == 'hilador' || esTejedora();
     }
 
     match /proyectos/{proyectoId} {
       allow read: if true;
-      allow write: if esMaestra();
+      allow create, delete: if esMaestra();
+      allow update: if esMaestra() || esUrdidora(); // urdidor ajusta apariencia/patrones del telar
 
       match /pasadas/{pasadaId} {
         allow read: if true;
-        allow write: if esMaestra() || esTejedora();
+        // hilador puede crear filas colaborativas (mesas) nuevas; estructura institucional es de maestra/tejedora
+        allow create: if esMaestra() || esTejedora() ||
+          (rolActual() == 'hilador' && request.resource.data.tipo == 'colaborativa');
+        allow update: if esMaestra() || esTejedora() || rolActual() == 'hilador';
+        allow delete: if esMaestra();
 
-        match /nudos/{hiloId} {
+        match /nudos/{nudoId} {
           // público solo ve nudos tejidos; crudo queda reservado a tejedoras/maestra
           allow read: if resource.data.estado == 'tejido' || esTejedora();
-          allow create, update: if esTejedora() || esHiladoraDe(proyectoId, pasadaId);
-          allow delete: if esMaestra();
+          allow create, update: if esHiladora();
+          allow delete: if esTejedora();
         }
       }
 
       match /plantillas/{plantillaId} {
         allow read: if true;
         allow write: if esUrdidora();
+      }
+
+      match /historial/{entradaId} {
+        allow read: if esMaestra();
+        allow create: if tieneRol();
+        allow update, delete: if false; // bitácora no destructiva
       }
     }
 

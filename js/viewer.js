@@ -2,19 +2,11 @@ import { db } from "./firebaseClient.js";
 import {
   collection, doc, getDoc, getDocs, query, where, orderBy, onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-import { renderBanner, renderCabecera, renderCuerpo, marcarActivo, agruparPorHilo } from "./telarCore.js";
+import { renderCabecera, renderCuerpo, marcarActivo, agruparPorHilo } from "./telarCore.js";
+import { APARIENCIA_DEFECTO } from "./motifs.js";
 
 var params = new URLSearchParams(location.search);
 var slug = params.get("p");
-
-var LEYENDA = [
-  { nombre: "Actores / Contexto", tinte: "#85751a" },
-  { nombre: "Ejes estratégicos", tinte: "#e29f3e" },
-  { nombre: "Cronograma / Agenda", tinte: "#bb6f3a" },
-  { nombre: "Desafío", tinte: "#bb6f3a" },
-  { nombre: "Cambio", tinte: "#e29f3e" },
-  { nombre: "Aporte", tinte: "#7a8b6a" }
-];
 
 var estado = {
   proyecto: null,
@@ -70,8 +62,6 @@ async function cargarProyecto() {
   $("titulo-proyecto").textContent = "El telar de " + (estado.proyecto.nombre || slug);
   $("lede-proyecto").textContent = estado.proyecto.nombreLargo ||
     "Cada nudo es algo que alguien dijo. La urdimbre la puso el proyecto; la trama la teje quien participa.";
-  renderBanner($("banner-telares"), estado.proyecto.nombre || "TELARES");
-  renderLeyenda();
   mostrarSolo("vista-telar");
 
   var qPasadas = query(collection(db, "proyectos", slug, "pasadas"), orderBy("index"));
@@ -100,9 +90,18 @@ function suscribirNudos(pasada) {
 }
 
 /* ---------------- render ---------------- */
+function apariencia() {
+  return estado.proyecto ? {
+    redondezExterior: estado.proyecto.redondezExterior,
+    redondezInterior: estado.proyecto.redondezInterior,
+    espacioNudos: estado.proyecto.espacioNudos
+  } : APARIENCIA_DEFECTO;
+}
+
 function renderCabeceraTop() {
   renderCabecera($("telar-cabecera"), estado.hilos, {
     corner: "pasada",
+    espacioNudos: apariencia().espacioNudos,
     hiloActivo: estado.hiloActivo,
     onHiloClick: function (hiloId) {
       estado.hiloActivo = estado.hiloActivo === hiloId ? null : hiloId;
@@ -119,6 +118,7 @@ function esVisible(nudo) {
 function renderTodo() {
   renderCuerpo($("telar-cuerpo"), estado.pasadas, estado.nudosPorPasada, {
     hilos: estado.hilos,
+    apariencia: apariencia(),
     soloTejido: true,
     esVisible: esVisible,
     onNudoClick: function (nudo, pasada, hiloId, todos, btn) {
@@ -137,14 +137,6 @@ function renderTodo() {
   renderHilosView(total);
 }
 
-function renderLeyenda() {
-  $("leyenda-lista").innerHTML = LEYENDA.map(function (l) {
-    return '<li style="display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--fg)">' +
-      '<span style="width:12px;height:12px;border-radius:3px;background:' + l.tinte + ';display:inline-block"></span>' +
-      l.nombre + "</li>";
-  }).join("");
-}
-
 function panelVacio() {
   $("panel-body").innerHTML =
     '<div class="eyebrow">Cómo leer el telar</div>' +
@@ -155,9 +147,14 @@ function mostrarPanel(nudo, pasada, hiloId, todos) {
   if (!nudo) { panelVacio(); return; }
   var hilo = estado.hilos.filter(function (h) { return h.id === hiloId; })[0] || {};
   var otros = (todos || []).filter(function (n) { return n.id !== nudo.id; });
+  var imagenSegura = esUrlSegura(nudo.imagenUrl);
+  var enlaceSeguro = esUrlSegura(nudo.enlaceUrl);
   var html = '<div class="eyebrow">' + (pasada.nombre || pasada.etiquetaCorta) +
     (hilo.nombre ? " · " + hilo.nombre : "") + "</div>" +
-    '<p class="cita">“' + (nudo.texto || "") + '”</p>' +
+    (nudo.titulo ? "<h2 style=\"font-size:1.05rem;margin-bottom:8px\">" + nudo.titulo + "</h2>" : "") +
+    (imagenSegura ? '<img src="' + imagenSegura + '" alt="" style="width:100%;border-radius:8px;margin-bottom:10px">' : "") +
+    (nudo.texto ? '<p class="cita">“' + nudo.texto + '”</p>' : "") +
+    (enlaceSeguro ? '<p><a href="' + enlaceSeguro + '" target="_blank" rel="noopener">Más información →</a></p>' : "") +
     '<div class="meta">' +
     (nudo.fuente ? '<span class="tag">' + fuenteLabel(nudo.fuente) + "</span>" : "") +
     (nudo.eco ? '<span class="tag">Con audio</span>' : "") +
@@ -171,6 +168,10 @@ function mostrarPanel(nudo, pasada, hiloId, todos) {
     html += "</div>";
   }
   $("panel-body").innerHTML = html;
+}
+function esUrlSegura(url) {
+  if (!url) return null;
+  return /^https:\/\//i.test(url) ? url : null;
 }
 function fuenteLabel(f) {
   return { sembrado: "Contenido de base", directo: "Cargado en vivo", eco: "Desde estación de audio" }[f] || f;

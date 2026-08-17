@@ -95,19 +95,13 @@ img,svg{max-width:100%}
 .counterchar{font-size:.7rem;color:var(--fg-soft);text-align:right}
 
 /* ---------- LA URDIMBRE: grilla compartida del telar ---------- */
-/* 1 columna guía + 6 columnas de contenido = 7 hilos, como TELARES */
+/* el número de columnas y el espacio entre nudos son configurables por
+   telar: telarCore.js fija grid-template-columns y gap por JS (inline) */
 .telar{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-m);
   padding:10px 8px 14px;overflow:hidden}
 @media(min-width:820px){.telar{padding:14px 14px 18px}}
 
-.banner-telares,.telar-cabecera,.pasada{display:grid;
-  grid-template-columns:26px repeat(6,minmax(0,1fr));gap:2px}
-@media(min-width:560px){.banner-telares,.telar-cabecera,.pasada{grid-template-columns:40px repeat(6,minmax(0,1fr));gap:3px}}
-
-.banner-telares{margin-bottom:8px}
-.banner-letra{aspect-ratio:1/1;border-radius:4px;display:flex;align-items:center;justify-content:center;
-  font-family:var(--font-display);font-weight:700;color:var(--white);font-size:clamp(.85rem,3vw,1.3rem);
-  position:relative;overflow:hidden}
+.telar-cabecera,.pasada{display:grid}
 
 .telar-cabecera{margin-bottom:5px;align-items:end}
 .hilo-cabecera{text-align:center;padding:2px 1px 5px;cursor:pointer;background:transparent;
@@ -167,12 +161,25 @@ img,svg{max-width:100%}
   .stage > .lado{grid-column:2;grid-row:2;align-self:start}
   .stage > .telar{grid-column:1;grid-row:1 / span 2}}
 
-/* ---------- leyenda ---------- */
-.leyenda{margin:22px 0 0;display:grid;gap:18px;grid-template-columns:1fr}
-@media(min-width:700px){.leyenda{grid-template-columns:1fr 1fr}}
-.leyenda h3{font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;color:var(--fg-soft);margin-bottom:10px}
-.leyenda ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px 18px}
-.leyenda li{display:flex;align-items:center;gap:8px;font-size:.78rem;color:var(--fg)}
+/* ---------- paleta cerrada (swatches) ---------- */
+.swatches{display:flex;gap:6px;flex-wrap:wrap}
+.swatch-btn{width:28px;height:28px;border-radius:7px;box-shadow:0 0 0 1px var(--line-strong) inset;
+  transition:transform var(--dur) var(--ease)}
+.swatch-btn:hover{transform:scale(1.12)}
+.swatch-btn[aria-pressed="true"]{box-shadow:0 0 0 2px var(--fg-strong)}
+.swatch-btn.vacio{background:transparent !important;box-shadow:0 0 0 1px var(--line-strong) inset;
+  position:relative}
+.swatch-btn.vacio::after{content:"×";position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;color:var(--fg-soft);font-size:.8rem}
+
+/* ---------- checklist de composición ---------- */
+.checklist{display:grid;gap:8px;grid-template-columns:1fr}
+@media(min-width:640px){.checklist{grid-template-columns:1fr 1fr}}
+.checklist label{display:flex;align-items:center;gap:9px;font-size:.84rem;color:var(--fg);
+  background:var(--bg-soft);border:1px solid var(--line);border-radius:var(--radius-s);padding:9px 12px}
+.checklist input{width:auto}
+
+input[type=range]{accent-color:var(--accent)}
 
 /* ---------- footer ---------- */
 footer.site{margin-top:44px;background:var(--ink);color:var(--cream);padding:30px 0 34px}

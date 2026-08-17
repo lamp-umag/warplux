@@ -1,108 +1,187 @@
 import { db } from "./firebaseClient.js";
 import {
-  collection, doc, getDoc, getDocs, setDoc, query, where, onSnapshot
+  collection, doc, getDoc, getDocs, setDoc, query, where, orderBy, onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-import { dibujarNudo } from "./motifs.js";
-
-var PROYECTO_ID = "telares";
-var CATEGORIA_LABEL = { desafio: "Desafío", cambio: "Cambio", aporte: "Aporte" };
-var ORIGENES = [
-  { id: "estudiante", label: "Estudiante", color: "#e29f3e" },
-  { id: "personal_no_academico", label: "Personal no académico", color: "#85751a" },
-  { id: "academico_tres_unidades", label: "Académico/a, tres unidades", color: "#bb6f3a" },
-  { id: "academico_otra_unidad", label: "Académico/a, otra unidad", color: "#3a402f" },
-  { id: "institucion_externa", label: "Institución externa", color: "#7a8b6a" },
-  { id: "grupal", label: "Grupal / sin atribuir", color: "#9a978c" }
-];
+import { dibujarNudo, PALETA } from "./motifs.js";
+import { FORMULARIO_MESA_DEFECTO, PARES_MESA, visualDesdeComposicion } from "./formularioMesaDefecto.js";
+import { registrar } from "./historial.js";
 
 export function render(el, perfil) {
-  var alcance = perfil.alcance && perfil.alcance[PROYECTO_ID];
-  if (!alcance || !alcance.pasadaId) {
-    el.innerHTML = '<div class="card"><p class="ghost">Todavía no tienes una mesa asignada. Pide a la maestra tejedora que te asigne una.</p></div>';
-    return function () {};
-  }
-  var pasadaId = alcance.pasadaId;
-  el.innerHTML = '<div id="hilador-cont"><p class="ghost">Cargando tu mesa…</p></div>';
-  cargar(el.querySelector("#hilador-cont"), pasadaId, perfil);
-  return function () {};
+  el.innerHTML = '<div id="hi-selector"></div><div id="hi-cuerpo" style="margin-top:16px"></div>';
+  var unsubCuerpo = null;
+  var unsub = renderSelectorTelar(el.querySelector("#hi-selector"), function (proyecto) {
+    if (unsubCuerpo) unsubCuerpo();
+    unsubCuerpo = mostrarMesas(el.querySelector("#hi-cuerpo"), proyecto, perfil);
+  });
+  return function () { unsub(); if (unsubCuerpo) unsubCuerpo(); };
 }
 
-async function cargar(el, pasadaId, perfil) {
-  var pasadaRef = doc(db, "proyectos", PROYECTO_ID, "pasadas", pasadaId);
-  var pasadaSnap = await getDoc(pasadaRef);
-  if (!pasadaSnap.exists()) { el.innerHTML = '<p class="ghost">Esta mesa todavía no existe en el telar.</p>'; return; }
-  var pasada = pasadaSnap.data();
-  var categoriaPorHilo = pasada.categoriaPorHilo || { c1: "desafio", c2: "desafio", c3: "cambio", c4: "cambio", c5: "aporte", c6: "aporte" };
-  var tintePorCategoria = pasada.tintePorCategoria || { desafio: "#bb6f3a", cambio: "#e29f3e", aporte: "#7a8b6a" };
+function renderSelectorTelar(el, onCambia) {
+  el.innerHTML = '<div class="field" style="max-width:320px"><label>Telar</label><select id="sel-telar"></select></div>';
+  var sel = el.querySelector("#sel-telar");
+  var unsub = onSnapshot(query(collection(db, "proyectos"), where("activo", "==", true)), function (snap) {
+    var actual = sel.value;
+    var opciones = [];
+    snap.forEach(function (d) { opciones.push(Object.assign({ id: d.id }, d.data())); });
+    sel.innerHTML = opciones.map(function (p) { return '<option value="' + p.id + '">' + p.nombre + "</option>"; }).join("");
+    var elegido = opciones.some(function (p) { return p.id === actual; }) ? actual : (opciones[0] && opciones[0].id);
+    if (elegido) { sel.value = elegido; onCambia(opciones.filter(function (p) { return p.id === elegido; })[0]); }
+  });
+  sel.addEventListener("change", async function () {
+    var snap = await getDoc(doc(db, "proyectos", sel.value));
+    if (snap.exists()) onCambia(Object.assign({ id: sel.value }, snap.data()));
+  });
+  return unsub;
+}
 
-  var plantillaSnap = await getDocs(query(collection(db, "proyectos", PROYECTO_ID, "plantillas"), where("tipo", "==", "colaborativa")));
-  var plantilla = null;
-  plantillaSnap.forEach(function (d) { if (!plantilla) plantilla = d.data(); });
-
-  var nudosCol = collection(db, "proyectos", PROYECTO_ID, "pasadas", pasadaId, "nudos");
+/* ================= lista de mesas ================= */
+function mostrarMesas(el, proyecto, perfil) {
+  var formulario = proyecto.formularioMesa || ((proyecto.columnas || 6) === 6 ? FORMULARIO_MESA_DEFECTO : null);
+  if (!formulario) {
+    el.innerHTML = '<p class="ghost">Este telar no tiene formulario de mesa configurado (necesita 6 columnas de contenido).</p>';
+    return function () {};
+  }
 
   el.innerHTML =
-    '<div class="notice">Esta mesa es <strong>' + (pasada.nombre || pasadaId) + '</strong>. Registrás como <strong>' + perfil.nombre + '</strong>. ' +
-    'Cada casilla se publica apenas la confirmas: no hay cola de revisión para el Coffee Lab.</div>' +
-    '<div class="field" style="max-width:220px"><label>Personas en la mesa</label>' +
-      '<input type="number" min="0" id="h-personas" value="' + (pasada.personas || "") + '"></div>' +
-    '<div id="h-casillas" style="display:grid;gap:12px;grid-template-columns:1fr"></div>' +
-    '<div class="field" style="margin-top:20px"><label>Notas de conversación (privadas, no se publican)</label>' +
-      '<textarea id="h-notas" style="min-height:120px">' + (pasada.notasPrivadas || "") + '</textarea>' +
-      '<button class="btn" id="h-guardar-notas" style="margin-top:8px">Guardar notas</button></div>';
+    '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">' +
+      '<h3 style="font-size:.95rem">Mesas de ' + proyecto.nombre + '</h3>' +
+      '<button class="btn primary" id="hi-crear-mesa">+ Crear nueva mesa</button>' +
+    '</div>' +
+    '<p class="ghost" id="hi-tope-aviso" style="margin-bottom:10px"></p>' +
+    '<div id="hi-lista-mesas" style="display:grid;gap:10px;grid-template-columns:1fr"></div>' +
+    '<div id="hi-form" style="margin-top:18px"></div>';
 
-  el.querySelector("#h-personas").addEventListener("change", function (e) {
-    setDoc(pasadaRef, { personas: +e.target.value }, { merge: true });
+  var qMesas = query(collection(db, "proyectos", proyecto.id, "pasadas"), where("tipo", "==", "colaborativa"), orderBy("index"));
+  var unsub = onSnapshot(qMesas, function (snap) {
+    var mesas = [];
+    snap.forEach(function (d) { mesas.push(Object.assign({ id: d.id }, d.data())); });
+    var max = typeof proyecto.filasHiladorMax === "number" ? proyecto.filasHiladorMax : 99;
+    var btnCrear = el.querySelector("#hi-crear-mesa");
+    btnCrear.disabled = mesas.length >= max;
+    el.querySelector("#hi-tope-aviso").textContent = mesas.length + " de " + max + " mesas creadas.";
+
+    el.querySelector("#hi-lista-mesas").innerHTML = mesas.map(function (m) {
+      return '<button class="btn" data-mesa="' + m.id + '" style="justify-content:flex-start;text-align:left">' +
+        (m.nombre || m.id) + '</button>';
+    }).join("") || '<p class="estado-vacio">Todavía no hay mesas. Crea la primera.</p>';
+
+    Array.prototype.forEach.call(el.querySelectorAll("[data-mesa]"), function (b) {
+      b.addEventListener("click", function () {
+        abrirFormularioMesa(el.querySelector("#hi-form"), proyecto, formulario, b.dataset.mesa, perfil);
+      });
+    });
   });
-  el.querySelector("#h-guardar-notas").addEventListener("click", function () {
-    setDoc(pasadaRef, { notasPrivadas: el.querySelector("#h-notas").value }, { merge: true });
+
+  el.querySelector("#hi-crear-mesa").addEventListener("click", async function () {
+    var pasadasSnap = await getDocs(collection(db, "proyectos", proyecto.id, "pasadas"));
+    var siguienteIndex = pasadasSnap.docs.reduce(function (max, d) { return Math.max(max, d.data().index || 0); }, 0) + 1;
+    var mesasExistentes = pasadasSnap.docs.filter(function (d) { return d.data().tipo === "colaborativa"; }).length;
+    var id = "mesa_" + Date.now().toString(36);
+    await setDoc(doc(db, "proyectos", proyecto.id, "pasadas", id), {
+      index: siguienteIndex, tipo: "colaborativa", etiquetaCorta: "M" + (mesasExistentes + 1),
+      nombre: "Mesa " + (mesasExistentes + 1), composicion: {}
+    });
+    registrar(proyecto.id, { tipo: "mesa_creada", resumen: "Mesa creada: Mesa " + (mesasExistentes + 1), autor: perfil.email });
+    abrirFormularioMesa(el.querySelector("#hi-form"), proyecto, formulario, id, perfil);
+  });
+
+  return unsub;
+}
+
+/* ================= formulario de una mesa ================= */
+async function abrirFormularioMesa(el, proyecto, formulario, pasadaId, perfil) {
+  var pasadaRef = doc(db, "proyectos", proyecto.id, "pasadas", pasadaId);
+  var pasadaSnap = await getDoc(pasadaRef);
+  var pasada = pasadaSnap.data() || {};
+  var composicion = pasada.composicion || {};
+  var apariencia = { redondezExterior: proyecto.redondezExterior, redondezInterior: proyecto.redondezInterior };
+  var nudosCol = collection(pasadaRef, "nudos");
+  var nudosSnap = await getDocs(nudosCol);
+  var porHilo = {};
+  nudosSnap.forEach(function (d) { porHilo[d.data().hiloId] = Object.assign({ id: d.id }, d.data()); });
+
+  el.innerHTML =
+    '<div class="notice">Estás editando <strong>' + (pasada.nombre || pasadaId) + '</strong> del telar <strong>' + proyecto.nombre + '</strong>. ' +
+    'Cada casilla se publica apenas la confirmas.</div>' +
+    '<h4 style="font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--fg-soft);margin-bottom:8px">¿Quiénes estaban en esta mesa?</h4>' +
+    '<div class="checklist" id="hi-composicion"></div>' +
+    '<div id="hi-casillas" style="display:grid;gap:12px;grid-template-columns:1fr;margin-top:20px"></div>';
+
+  el.querySelector("#hi-composicion").innerHTML = formulario.composicionPreguntas.map(function (q) {
+    return '<label><input type="checkbox" data-comp="' + q.id + '"' + (composicion[q.id] ? " checked" : "") + '> ' + q.label + "</label>";
+  }).join("");
+
+  function composicionActual() {
+    var c = {};
+    Array.prototype.forEach.call(el.querySelectorAll("[data-comp]"), function (chk) { c[chk.dataset.comp] = chk.checked; });
+    return c;
+  }
+
+  function parDe(hiloId) {
+    return PARES_MESA.filter(function (p) { return p.cols.indexOf(hiloId) !== -1; })[0] || { giro: 0, espejo: false };
+  }
+
+  function nudoGenerado(hiloId) {
+    var cat = formulario.categoriaPorHilo[hiloId];
+    var visual = visualDesdeComposicion(composicionActual(), PALETA);
+    var par = parDe(hiloId);
+    return {
+      punto: visual.punto, matiz: visual.matiz, acento: visual.acento,
+      tinte: formulario.tintePorCategoria[cat], giro: par.giro, espejo: par.espejo
+    };
+  }
+
+  function repintarPrevias() {
+    Array.prototype.forEach.call(el.querySelectorAll("[data-hilo]"), function (card) {
+      var hiloId = card.dataset.hilo;
+      card.querySelector(".hi-preview").innerHTML = dibujarNudo(nudoGenerado(hiloId), apariencia);
+    });
+  }
+
+  Array.prototype.forEach.call(el.querySelectorAll("[data-comp]"), function (chk) {
+    chk.addEventListener("change", function () {
+      setDoc(pasadaRef, { composicion: composicionActual() }, { merge: true });
+      repintarPrevias();
+    });
   });
 
   var hilos = ["c1", "c2", "c3", "c4", "c5", "c6"];
   var contadorCategoria = {};
-  var casillas = el.querySelector("#h-casillas");
+  var casillas = el.querySelector("#hi-casillas");
   casillas.innerHTML = hilos.map(function (hiloId, i) {
-    var cat = categoriaPorHilo[hiloId] || "aporte";
+    var cat = formulario.categoriaPorHilo[hiloId];
     contadorCategoria[cat] = (contadorCategoria[cat] || 0) + 1;
-    var forma = plantilla && plantilla.hilos && plantilla.hilos[i] ? plantilla.hilos[i] : { punto: "solido", redondez: 16, giro: 0 };
-    var previa = dibujarNudo({ punto: forma.punto, redondez: forma.redondez, giro: forma.giro, tinte: tintePorCategoria[cat] });
-    return '<div class="card" data-hilo="' + hiloId + '" data-cat="' + cat + '">' +
+    var pregunta = formulario.preguntas[Math.floor(i / 2)];
+    var existente = porHilo[hiloId];
+    return '<div class="card" data-hilo="' + hiloId + '">' +
       '<div style="display:flex;gap:12px;align-items:flex-start">' +
-        '<div style="width:44px;height:44px;flex:0 0 auto" class="c-preview">' + previa + '</div>' +
+        '<div class="hi-preview" style="width:44px;height:44px;flex:0 0 auto">' + dibujarNudo(nudoGenerado(hiloId), apariencia) + '</div>' +
         '<div style="flex:1">' +
-          '<strong>' + CATEGORIA_LABEL[cat] + " " + contadorCategoria[cat] + '</strong>' +
-          '<div class="field" style="margin-top:8px"><textarea class="c-frase" maxlength="180" placeholder="Una frase, tal como se acordó en la mesa."></textarea>' +
-            '<div class="counterchar"><span class="c-cont">0</span>/180</div></div>' +
-          '<div class="pair">' +
-            '<div class="field"><label>¿Quién lo dijo?</label><select class="c-origen">' +
-              ORIGENES.map(function (o) { return '<option value="' + o.id + '">' + o.label + "</option>"; }).join("") +
-            '</select></div>' +
-            '<div class="field" style="display:flex;align-items:flex-end"><button class="btn primary c-confirmar">Confirmar</button></div>' +
-          '</div>' +
+          '<strong>' + formulario.categoriaLabel[cat] + " " + contadorCategoria[cat] + '</strong>' +
+          '<p class="ghost" style="margin:4px 0 8px">' + pregunta + '</p>' +
+          '<div class="field"><textarea class="c-frase" maxlength="180">' + (existente ? existente.texto : "") + '</textarea>' +
+            '<div class="counterchar"><span class="c-cont">' + (existente ? existente.texto.length : 0) + '</span>/180</div></div>' +
+          '<button class="btn primary c-confirmar">Confirmar</button> ' +
           '<span class="c-guardado ghost" hidden>Guardado ✓</span>' +
         '</div>' +
       '</div></div>';
   }).join("");
 
   Array.prototype.forEach.call(casillas.querySelectorAll("[data-hilo]"), function (card) {
-    var hiloId = card.dataset.hilo, cat = card.dataset.cat;
+    var hiloId = card.dataset.hilo;
     var frase = card.querySelector(".c-frase"), cont = card.querySelector(".c-cont");
     frase.addEventListener("input", function () { cont.textContent = frase.value.length; });
     card.querySelector(".c-confirmar").addEventListener("click", async function () {
       var texto = frase.value.trim();
       if (!texto) { frase.focus(); return; }
-      var origen = card.querySelector(".c-origen").value;
-      var origenObj = ORIGENES.filter(function (o) { return o.id === origen; })[0];
-      var forma = plantilla && plantilla.hilos ? plantilla.hilos[hilos.indexOf(hiloId)] : null;
-      await setDoc(doc(nudosCol, "directo_" + hiloId), {
-        hiloId: hiloId, texto: texto, origen: origen,
-        punto: (forma && forma.punto) || "solido",
-        redondez: (forma && forma.redondez) || 16,
-        giro: (forma && forma.giro) || 0,
-        tinte: tintePorCategoria[cat],
-        matiz: origenObj ? origenObj.color : null,
-        estado: "tejido", fuente: "directo", eco: false
-      });
+      var generado = nudoGenerado(hiloId);
+      var existente = porHilo[hiloId];
+      var ref = existente ? doc(nudosCol, existente.id) : doc(nudosCol, "directo_" + hiloId);
+      await setDoc(ref, Object.assign({
+        hiloId: hiloId, texto: texto, estado: "tejido", fuente: "directo", eco: false
+      }, generado), { merge: true });
+      porHilo[hiloId] = Object.assign({ id: "directo_" + hiloId }, generado, { texto: texto });
+      registrar(proyecto.id, { tipo: "aporte_hilado", resumen: "Aporte cargado en " + (pasada.nombre || pasadaId), autor: perfil.email });
       var g = card.querySelector(".c-guardado");
       g.hidden = false; setTimeout(function () { g.hidden = true; }, 2500);
     });
