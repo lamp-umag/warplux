@@ -92,7 +92,7 @@ async function abrirFormularioMesa(el, proyecto, formulario, pasadaId, perfil) {
 
   el.innerHTML =
     '<div class="notice">Estás llenando <strong>' + (pasada.nombre || pasadaId) + '</strong> del telar <strong>' + proyecto.nombre + '</strong>. ' +
-    'Cada pregunta se publica apenas la confirmas.</div>' +
+    'Se guarda mientras escribes — con solo título o solo descripción ya se ve en el telar.</div>' +
     '<div id="hi-preguntas" style="display:grid;gap:12px;grid-template-columns:1fr;margin-top:16px"></div>';
 
   function apariencia() { return { punto: "solido" }; }
@@ -126,7 +126,6 @@ async function abrirFormularioMesa(el, proyecto, formulario, pasadaId, perfil) {
           '<div class="field"><label>Título</label><input class="q-titulo" value="' + (existente ? (existente.titulo || "") : "") + '"></div>' +
           '<div class="field"><label>Descripción</label><textarea class="q-texto" maxlength="220">' + (existente ? (existente.texto || "") : "") + '</textarea>' +
             '<div class="counterchar"><span class="q-cont">' + (existente ? (existente.texto || "").length : 0) + '</span>/220</div></div>' +
-          '<button class="btn primary q-confirmar">Confirmar</button> ' +
           '<span class="q-guardado ghost" hidden>Guardado ✓</span>' +
         '</div>' +
       '</div></div>';
@@ -138,11 +137,11 @@ async function abrirFormularioMesa(el, proyecto, formulario, pasadaId, perfil) {
     var i = +card.dataset.i;
     var p = formulario.preguntas[i];
     var titulo = card.querySelector(".q-titulo"), texto = card.querySelector(".q-texto"), cont = card.querySelector(".q-cont");
-    texto.addEventListener("input", function () { cont.textContent = texto.value.length; });
-    card.querySelector(".q-confirmar").addEventListener("click", async function () {
+    var registrarDebounce = null;
+
+    // guarda en vivo, sin botón "Confirmar": alcanza con título O descripción, no hace falta llenar ambos.
+    function guardar() {
       var tituloVal = titulo.value.trim(), textoVal = texto.value.trim();
-      if (!tituloVal) { titulo.focus(); return; }
-      if (!textoVal) { texto.focus(); return; }
       var par = PARES_MESA[i];
       for (var c = 0; c < p.cols.length; c++) {
         var hiloId = p.cols[c];
@@ -160,12 +159,18 @@ async function abrirFormularioMesa(el, proyecto, formulario, pasadaId, perfil) {
                 estado: "tejido", fuente: "directo", eco: false
               };
             })();
-        await setDoc(ref, datos, { merge: true });
+        setDoc(ref, datos, { merge: true });
         porHilo[hiloId] = Object.assign({ id: "directo_" + hiloId }, existente, datos);
       }
-      registrar(proyecto.id, { tipo: "aporte_hilado", resumen: "Aporte cargado en " + (pasada.nombre || pasadaId) + " (" + formulario.categoriaLabel[p.categoria] + ")", autor: perfil.email });
       var g = card.querySelector(".q-guardado");
-      g.hidden = false; setTimeout(function () { g.hidden = true; }, 2500);
-    });
+      g.hidden = false; clearTimeout(g._ocultar); g._ocultar = setTimeout(function () { g.hidden = true; }, 1500);
+      clearTimeout(registrarDebounce);
+      registrarDebounce = setTimeout(function () {
+        registrar(proyecto.id, { tipo: "aporte_hilado", resumen: "Aporte cargado en " + (pasada.nombre || pasadaId) + " (" + formulario.categoriaLabel[p.categoria] + ")", autor: perfil.email });
+      }, 800);
+    }
+
+    titulo.addEventListener("input", guardar);
+    texto.addEventListener("input", function () { cont.textContent = texto.value.length; guardar(); });
   });
 }

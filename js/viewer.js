@@ -117,12 +117,10 @@ function esVisible(nudo) {
   return !estado.hiloActivo || nudo.hiloId === estado.hiloActivo;
 }
 
-// un nudo sin título ni texto se ve vacío en el telar público, sin importar
-// qué forma/color le haya dado el urdidor de antemano — recién aparece
-// cuando tiene algo que decir. Sin celda-fantasma color crema: invisible.
-function vacioFn() {
-  return { punto: "vacio", tinte: "transparent" };
-}
+// un nudo sin título ni texto se ve vacío (el crema/gris de siempre, vía el
+// fallback de renderCuerpo) en el telar público, sin importar qué forma o
+// color le haya dado el urdidor de antemano — recién muestra su color real
+// cuando tiene algo que decir.
 
 function tieneContenido(n) {
   return !!((n.titulo && n.titulo.trim()) || (n.texto && n.texto.trim()));
@@ -135,7 +133,6 @@ function renderTodo() {
     soloTejido: true,
     soloConContenido: true,
     esVisible: esVisible,
-    vacioFn: vacioFn,
     onNudoClick: function (nudo, pasada, hiloId, todos, btn) {
       marcarActivo($("telar-cuerpo"), btn);
       mostrarPanel(nudo, pasada, hiloId, todos);
