@@ -143,19 +143,25 @@ async function abrirFormularioMesa(el, proyecto, formulario, pasadaId, perfil) {
       var tituloVal = titulo.value.trim(), textoVal = texto.value.trim();
       if (!tituloVal) { titulo.focus(); return; }
       if (!textoVal) { texto.focus(); return; }
-      var estilo = nudoGeneradoPara(p.categoria);
       var par = PARES_MESA[i];
       for (var c = 0; c < p.cols.length; c++) {
         var hiloId = p.cols[c];
         var existente = porHilo[hiloId];
         var ref = existente ? doc(nudosCol, existente.id) : doc(nudosCol, "directo_" + hiloId);
-        var datos = {
-          hiloId: hiloId, titulo: tituloVal, texto: textoVal,
-          punto: estilo.punto, tinte: estilo.tinte, matiz: estilo.matiz, giro: par.giro, espejo: par.espejo,
-          estado: "tejido", fuente: "directo", eco: false
-        };
+        // la apariencia (punto/tinte/matiz/giro/espejo) solo se fija al crear el nudo;
+        // si ya existe, el hilador solo puede tocar el texto — la apariencia es del urdidor/tejedor.
+        var datos = existente
+          ? { hiloId: hiloId, titulo: tituloVal, texto: textoVal, estado: "tejido" }
+          : (function () {
+              var estilo = nudoGeneradoPara(p.categoria);
+              return {
+                hiloId: hiloId, titulo: tituloVal, texto: textoVal,
+                punto: estilo.punto, tinte: estilo.tinte, matiz: estilo.matiz, giro: par.giro, espejo: par.espejo,
+                estado: "tejido", fuente: "directo", eco: false
+              };
+            })();
         await setDoc(ref, datos, { merge: true });
-        porHilo[hiloId] = Object.assign({ id: "directo_" + hiloId }, datos);
+        porHilo[hiloId] = Object.assign({ id: "directo_" + hiloId }, existente, datos);
       }
       registrar(proyecto.id, { tipo: "aporte_hilado", resumen: "Aporte cargado en " + (pasada.nombre || pasadaId) + " (" + formulario.categoriaLabel[p.categoria] + ")", autor: perfil.email });
       var g = card.querySelector(".q-guardado");
