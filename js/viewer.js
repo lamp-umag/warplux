@@ -28,7 +28,7 @@ function mostrarSolo(id) {
 /* ---------------- catálogo ---------------- */
 async function renderCatalogo() {
   $("titulo-proyecto").textContent = "Telares";
-  $("lede-proyecto").textContent = "Elige un telar para verlo tejerse.";
+  $("lede-proyecto").textContent = "";
   mostrarSolo("vista-catalogo");
   var q = query(collection(db, "proyectos"), where("activo", "==", true));
   var snap = await getDocs(q);
@@ -59,9 +59,8 @@ async function cargarProyecto() {
   estado.hilos = estado.proyecto.urdimbre || [];
   document.title = (estado.proyecto.nombre || slug) + " — el telar";
   $("marca-nombre").textContent = estado.proyecto.nombre || slug;
-  $("titulo-proyecto").textContent = "El telar de " + (estado.proyecto.nombre || slug);
-  $("lede-proyecto").textContent = estado.proyecto.nombreLargo ||
-    "Cada nudo es algo que alguien dijo. La urdimbre la puso el proyecto; la trama la teje quien participa.";
+  $("titulo-proyecto").textContent = estado.proyecto.nombre || slug;
+  $("lede-proyecto").textContent = estado.proyecto.nombreLargo || "";
   mostrarSolo("vista-telar");
 
   var qPasadas = query(collection(db, "proyectos", slug, "pasadas"), orderBy("index"));
@@ -118,12 +117,20 @@ function esVisible(nudo) {
   return !estado.hiloActivo || nudo.hiloId === estado.hiloActivo;
 }
 
+// una mesa colaborativa recién creada debe verse vacía hasta que un hilador
+// escribe algo ahí: sin celda-fantasma color crema, directamente invisible.
+function vacioFn(pasada) {
+  if (pasada.tipo === "colaborativa") return { punto: "vacio", tinte: "transparent" };
+  return null;
+}
+
 function renderTodo() {
   renderCuerpo($("telar-cuerpo"), estado.pasadas, estado.nudosPorPasada, {
     hilos: estado.hilos,
     apariencia: apariencia(),
     soloTejido: true,
     esVisible: esVisible,
+    vacioFn: vacioFn,
     onNudoClick: function (nudo, pasada, hiloId, todos, btn) {
       marcarActivo($("telar-cuerpo"), btn);
       mostrarPanel(nudo, pasada, hiloId, todos);

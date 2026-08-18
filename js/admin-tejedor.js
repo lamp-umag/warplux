@@ -140,19 +140,58 @@ function cargarTelar(el, estado, perfil) {
 
 function renderFilasLista(el, estado, perfil) {
   var cont = el.querySelector("#ct-filas-lista");
-  cont.innerHTML = estado.pasadas.map(function (p) {
-    return '<label style="display:flex;align-items:center;gap:8px;font-size:.82rem">' +
-      '<input type="checkbox" class="ct-fila-activa" data-pasada="' + p.id + '"' + (p.activo !== false ? " checked" : "") + '>' +
-      '<span class="tag">' + (p.tipo || "") + '</span> ' + (p.nombre || p.id) +
-    '</label>';
+  var n = estado.pasadas.length;
+  cont.innerHTML = estado.pasadas.map(function (p, i) {
+    return '<div class="fila-item" data-pasada="' + p.id + '">' +
+      '<input type="checkbox" class="fl-activa" title="Activa (visible al público)"' + (p.activo !== false ? " checked" : "") + '>' +
+      '<span class="tag">' + (p.tipo || "") + '</span>' +
+      '<input class="fl-nombre" value="' + (p.nombre || "") + '">' +
+      '<button class="btn fl-subir" title="Subir"' + (i === 0 ? " disabled" : "") + '>↑</button>' +
+      '<button class="btn fl-bajar" title="Bajar"' + (i === n - 1 ? " disabled" : "") + '>↓</button>' +
+      '<button class="btn fl-borrar" title="Borrar fila">Borrar</button>' +
+    '</div>';
   }).join("") || '<p class="estado-vacio">Todavía no hay filas. Agrega una arriba.</p>';
 
-  Array.prototype.forEach.call(cont.querySelectorAll("[data-pasada]"), function (chk) {
-    chk.addEventListener("change", function () {
-      setDoc(doc(db, "proyectos", estado.proyecto.id, "pasadas", chk.dataset.pasada), { activo: chk.checked }, { merge: true });
-      registrar(estado.proyecto.id, { tipo: "fila_activada", resumen: (chk.checked ? "Fila activada: " : "Fila desactivada: ") + chk.dataset.pasada, autor: perfil.email });
+  Array.prototype.forEach.call(cont.querySelectorAll("[data-pasada]"), function (fila) {
+    var id = fila.dataset.pasada;
+    var ref = doc(db, "proyectos", estado.proyecto.id, "pasadas", id);
+
+    fila.querySelector(".fl-activa").addEventListener("change", function (e) {
+      setDoc(ref, { activo: e.target.checked }, { merge: true });
+      registrar(estado.proyecto.id, { tipo: "fila_activada", resumen: (e.target.checked ? "Fila activada: " : "Fila desactivada: ") + id, autor: perfil.email });
     });
+
+    var nombreInput = fila.querySelector(".fl-nombre");
+    function guardarNombre() {
+      var nombre = nombreInput.value.trim();
+      if (!nombre) { nombreInput.value = estado.pasadas.filter(function (p) { return p.id === id; })[0].nombre || ""; return; }
+      setDoc(ref, { nombre: nombre }, { merge: true });
+      registrar(estado.proyecto.id, { tipo: "fila_renombrada", resumen: "Fila renombrada: " + nombre, autor: perfil.email });
+    }
+    nombreInput.addEventListener("blur", guardarNombre);
+    nombreInput.addEventListener("keydown", function (e) { if (e.key === "Enter") nombreInput.blur(); });
+
+    fila.querySelector(".fl-subir").addEventListener("click", function () { moverFila(estado, id, -1); });
+    fila.querySelector(".fl-bajar").addEventListener("click", function () { moverFila(estado, id, 1); });
+    fila.querySelector(".fl-borrar").addEventListener("click", function () { borrarFila(estado, id, perfil); });
   });
+}
+
+function moverFila(estado, id, direccion) {
+  var i = estado.pasadas.findIndex(function (p) { return p.id === id; });
+  var j = i + direccion;
+  if (i === -1 || j < 0 || j >= estado.pasadas.length) return;
+  var a = estado.pasadas[i], b = estado.pasadas[j];
+  setDoc(doc(db, "proyectos", estado.proyecto.id, "pasadas", a.id), { index: b.index }, { merge: true });
+  setDoc(doc(db, "proyectos", estado.proyecto.id, "pasadas", b.id), { index: a.index }, { merge: true });
+}
+
+async function borrarFila(estado, id, perfil) {
+  if (!confirm("¿Borrar esta fila y todo su contenido? Esto no se puede deshacer.")) return;
+  var nudosSnap = await getDocs(collection(db, "proyectos", estado.proyecto.id, "pasadas", id, "nudos"));
+  for (var i = 0; i < nudosSnap.docs.length; i++) await deleteDoc(nudosSnap.docs[i].ref);
+  await deleteDoc(doc(db, "proyectos", estado.proyecto.id, "pasadas", id));
+  registrar(estado.proyecto.id, { tipo: "fila_borrada", resumen: "Fila borrada: " + id, autor: perfil.email });
 }
 
 function suscribirNudos(el, estado, pasada, perfil, unsubs) {
