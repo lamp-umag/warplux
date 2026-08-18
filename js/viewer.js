@@ -117,11 +117,15 @@ function esVisible(nudo) {
   return !estado.hiloActivo || nudo.hiloId === estado.hiloActivo;
 }
 
-// una mesa colaborativa recién creada debe verse vacía hasta que un hilador
-// escribe algo ahí: sin celda-fantasma color crema, directamente invisible.
-function vacioFn(pasada) {
-  if (pasada.tipo === "colaborativa") return { punto: "vacio", tinte: "transparent" };
-  return null;
+// un nudo sin título ni texto se ve vacío en el telar público, sin importar
+// qué forma/color le haya dado el urdidor de antemano — recién aparece
+// cuando tiene algo que decir. Sin celda-fantasma color crema: invisible.
+function vacioFn() {
+  return { punto: "vacio", tinte: "transparent" };
+}
+
+function tieneContenido(n) {
+  return !!((n.titulo && n.titulo.trim()) || (n.texto && n.texto.trim()));
 }
 
 function renderTodo() {
@@ -129,6 +133,7 @@ function renderTodo() {
     hilos: estado.hilos,
     apariencia: apariencia(),
     soloTejido: true,
+    soloConContenido: true,
     esVisible: esVisible,
     vacioFn: vacioFn,
     onNudoClick: function (nudo, pasada, hiloId, todos, btn) {
@@ -142,7 +147,9 @@ function renderTodo() {
   });
 
   var total = 0;
-  Object.keys(estado.nudosPorPasada).forEach(function (k) { total += estado.nudosPorPasada[k].length; });
+  Object.keys(estado.nudosPorPasada).forEach(function (k) {
+    total += estado.nudosPorPasada[k].filter(tieneContenido).length;
+  });
   $("pie-conteo").textContent = total + " nudo" + (total === 1 ? "" : "s") + " tejido" + (total === 1 ? "" : "s");
   renderHilosView(total);
 }
@@ -211,10 +218,10 @@ function renderHilosView(total) {
   estado.pasadas.forEach(function (pasada) {
     var grupos = agruparPorHilo(estado.nudosPorPasada[pasada.id] || []);
     Object.keys(grupos).forEach(function (hiloId) {
-      grupos[hiloId].forEach(function (n) {
+      grupos[hiloId].filter(tieneContenido).forEach(function (n) {
         var hilo = estado.hilos.filter(function (h) { return h.id === hiloId; })[0] || {};
         html += '<div class="card" style="border-left:4px solid ' + (n.tinte || "#ccc") + '">' +
-          '<p class="cita" style="margin:0 0 8px">“' + n.texto + '”</p>' +
+          '<p class="cita" style="margin:0 0 8px">“' + (n.texto || n.titulo) + '”</p>' +
           '<div class="meta">' +
           '<span class="tag">' + (pasada.nombre || pasada.etiquetaCorta) + "</span>" +
           (hilo.nombre ? '<span class="tag">' + hilo.nombre + "</span>" : "") +

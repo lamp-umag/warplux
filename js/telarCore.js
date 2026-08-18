@@ -54,10 +54,20 @@ export function renderCabecera(el, hilos, opts) {
   }
 }
 
+/** un nudo "cuenta" para opts.soloTejido/soloConContenido; título O texto ya es contenido, no hace falta ambos */
+function filtrarNudos(lista, opts) {
+  return (lista || []).filter(function (n) {
+    if (opts.soloTejido && n.estado !== "tejido") return false;
+    if (opts.soloConContenido && !((n.titulo && n.titulo.trim()) || (n.texto && n.texto.trim()))) return false;
+    return true;
+  });
+}
+
 /**
  * cuerpo del telar. pasadas: [{id, etiquetaCorta, ...}], nudosPorPasada: {pasadaId: [nudo,...]}
  * opts: { hilos, apariencia, onNudoClick(nudo, pasada, hiloId, todos), onNudoHover,
- *         esVisible(nudo), esReciente(nudo), vacioFn(pasada,hiloId), vacioInteractivo }
+ *         esVisible(nudo), esReciente(nudo), vacioFn(pasada,hiloId), vacioInteractivo,
+ *         soloTejido, soloConContenido }
  */
 export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
   opts = opts || {};
@@ -70,9 +80,7 @@ export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
       GRID_GUIA + " repeat(" + hilosContenido.length + ',minmax(0,1fr));gap:' + apariencia.espacioNudos + 'px">';
     html += '<div class="pasada-etiqueta">' + (pasada.etiquetaCorta || "") + "</div>";
     hilosContenido.forEach(function (hilo) {
-      var lista = (grupos[hilo.id] || []).filter(function (n) {
-        return opts.soloTejido ? n.estado === "tejido" : true;
-      });
+      var lista = filtrarNudos(grupos[hilo.id], opts);
       if (!lista.length) {
         var vacioNudo = (opts.vacioFn && opts.vacioFn(pasada, hilo.id)) || { punto: "vacio", tinte: "#f2f1ed" };
         var interactivo = opts.vacioInteractivo;
@@ -101,7 +109,7 @@ export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
     Array.prototype.forEach.call(el.querySelectorAll("[data-pasada][data-hilo]"), function (btn) {
       var pasadaId = btn.dataset.pasada, hiloId = btn.dataset.hilo;
       var pasada = pasadas.filter(function (p) { return p.id === pasadaId; })[0];
-      var todos = (agruparPorHilo(nudosPorPasada[pasadaId] || [])[hiloId] || []);
+      var todos = filtrarNudos((agruparPorHilo(nudosPorPasada[pasadaId] || [])[hiloId] || []), opts);
       if (opts.onNudoClick) btn.addEventListener("click", function (e) { opts.onNudoClick(todos[0], pasada, hiloId, todos, btn, e); });
       if (opts.onNudoHover) btn.addEventListener("mouseenter", function () { opts.onNudoHover(todos[0], pasada, hiloId, todos, btn); });
     });
