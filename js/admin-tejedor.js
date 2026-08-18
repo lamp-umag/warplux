@@ -1,48 +1,40 @@
 import { db } from "./firebaseClient.js";
 import {
-  collection, collectionGroup, doc, getDoc, setDoc, updateDoc, deleteDoc,
+  collection, collectionGroup, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
   query, where, orderBy, onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-import { renderCabecera, renderCuerpo, marcarActivo, agruparPorHilo } from "./telarCore.js";
-import { dibujarNudo, PUNTOS, PALETA } from "./motifs.js";
-
-var estado = { proyecto: null, pasadas: [], nudosPorPasada: {}, suscritas: {} };
+import { renderCabecera, renderCuerpo } from "./telarCore.js";
+import { dibujarNudo } from "./motifs.js";
+import { CATEGORIAS, suscribirEstilos, resolverEstiloCategoria } from "./estilos.js";
+import { FORMULARIO_MESA_DEFECTO, PARES_MESA } from "./formularioMesaDefecto.js";
+import { registrar } from "./historial.js";
 
 export function render(el, perfil) {
   var unsubs = [];
   el.innerHTML =
-    '<div id="tj-selector" style="margin-bottom:14px"></div>' +
     '<div class="tabs" style="margin-bottom:18px">' +
-      '<button class="tab" data-tab="telar" aria-selected="true">Telar completo</button>' +
+      '<button class="tab" data-tab="contenido" aria-selected="true">Contenido</button>' +
+      '<button class="tab" data-tab="mesas-nuevas" aria-selected="false">Estilo de mesas nuevas</button>' +
       '<button class="tab" data-tab="cola" aria-selected="false">Cola de moderación</button>' +
     '</div>' +
-    '<div id="tejedor-telar">' +
-      '<div class="stage">' +
-        '<div class="telar"><div id="tj-cabecera" class="telar-cabecera"></div><div id="tj-cuerpo"></div></div>' +
-        '<aside class="panel" id="tj-panel"><div id="tj-panel-body"><p class="estado-vacio">Toca un nudo para editarlo.</p></div></aside>' +
-      '</div>' +
-    '</div>' +
-    '<div id="tejedor-cola" hidden><div id="lista-cola-tj"></div></div>';
+    '<div id="panel-contenido"></div>' +
+    '<div id="panel-mesas-nuevas" hidden></div>' +
+    '<div id="panel-cola" hidden></div>';
 
   Array.prototype.forEach.call(el.querySelectorAll(".tab"), function (t) {
     t.addEventListener("click", function () {
       Array.prototype.forEach.call(el.querySelectorAll(".tab"), function (o) { o.setAttribute("aria-selected", o === t ? "true" : "false"); });
-      el.querySelector("#tejedor-telar").hidden = t.dataset.tab !== "telar";
-      el.querySelector("#tejedor-cola").hidden = t.dataset.tab !== "cola";
+      ["contenido", "mesas-nuevas", "cola"].forEach(function (k) {
+        el.querySelector("#panel-" + k).hidden = k !== t.dataset.tab;
+      });
     });
   });
 
-  var unsubTelar = null;
-  var unsubSel = renderSelectorTelar(el.querySelector("#tj-selector"), function (proyecto) {
-    if (unsubTelar) unsubTelar();
-    estado.proyecto = proyecto;
-    estado.nudosPorPasada = {};
-    estado.suscritas = {};
-    unsubTelar = cargarTelar(el);
-  });
-  unsubs.push(unsubSel);
-  cargarCola(el, unsubs);
-  return function () { unsubs.forEach(function (u) { u(); }); if (unsubTelar) unsubTelar(); };
+  renderContenido(el.querySelector("#panel-contenido"), perfil, unsubs);
+  renderMesasNuevas(el.querySelector("#panel-mesas-nuevas"), perfil, unsubs);
+  renderCola(el.querySelector("#panel-cola"), unsubs);
+
+  return function () { unsubs.forEach(function (u) { u(); }); };
 }
 
 function renderSelectorTelar(el, onCambia) {
@@ -63,25 +55,107 @@ function renderSelectorTelar(el, onCambia) {
   return unsub;
 }
 
-function apariencia() {
-  return { redondezExterior: estado.proyecto.redondezExterior, redondezInterior: estado.proyecto.redondezInterior, espacioNudos: estado.proyecto.espacioNudos };
+function slugificar(s) {
+  return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-function cargarTelar(el) {
+function clave(pasadaId, hiloId) { return pasadaId + "|" + hiloId; }
+
+/* ================= CONTENIDO: grilla completa + panel de edición ================= */
+export function renderContenido(el, perfil, unsubs) {
+  var estado = {
+    proyecto: null, pasadas: [], nudosPorPasada: {}, suscritas: {}, estilos: [],
+    seleccion: [], ancla: null
+  };
+
+  el.innerHTML =
+    '<div id="ct-selector" style="margin-bottom:14px"></div>' +
+    '<div class="card" style="max-width:520px;margin-bottom:16px">' +
+      '<div class="pair" style="align-items:flex-end">' +
+        '<div class="field"><label>Nombre de la nueva fila</label><input id="np-nombre" placeholder="Ej: Eje B"></div>' +
+        '<div class="field"><label>Tipo</label><select id="np-tipo">' +
+          '<option value="institucional">Institucional</option><option value="colaborativa">Colaborativa (mesa)</option>' +
+        '</select></div>' +
+      '</div>' +
+      '<button class="btn primary" id="np-crear">Agregar fila</button>' +
+      '<p class="ghost" style="margin-top:6px">Empieza vacía y oculta para quien visita el telar. Actívala abajo cuando esté lista.</p>' +
+    '</div>' +
+    '<div class="card" style="margin-bottom:16px">' +
+      '<h3 style="font-size:.9rem;margin-bottom:10px">Filas de este telar</h3>' +
+      '<div id="ct-filas-lista" style="display:grid;gap:6px"></div>' +
+    '</div>' +
+    '<p class="ghost" style="margin-bottom:10px">Clic para elegir un nudo. Shift+clic selecciona un rango, Ctrl/Cmd+clic suma o quita uno — como en Excel.</p>' +
+    '<div class="stage">' +
+      '<div class="telar"><div id="ct-cabecera" class="telar-cabecera"></div><div id="ct-cuerpo"></div></div>' +
+      '<aside class="panel" id="ct-panel"><div id="ct-panel-body"><p class="estado-vacio">Toca un nudo para editarlo.</p></div></aside>' +
+    '</div>';
+
+  var unsubTelar = null, unsubEstilos = null;
+  var unsubSel = renderSelectorTelar(el.querySelector("#ct-selector"), function (proyecto) {
+    if (unsubTelar) unsubTelar();
+    if (unsubEstilos) unsubEstilos();
+    estado.proyecto = proyecto;
+    estado.nudosPorPasada = {};
+    estado.suscritas = {};
+    estado.seleccion = [];
+    estado.ancla = null;
+    unsubEstilos = suscribirEstilos(proyecto.id, function (lista) { estado.estilos = lista; });
+    unsubTelar = cargarTelar(el, estado, perfil);
+  });
+  unsubs.push(unsubSel);
+  unsubs.push(function () { if (unsubTelar) unsubTelar(); if (unsubEstilos) unsubEstilos(); });
+
+  el.querySelector("#np-crear").addEventListener("click", async function () {
+    if (!estado.proyecto) return;
+    var nombre = el.querySelector("#np-nombre").value.trim();
+    if (!nombre) { el.querySelector("#np-nombre").focus(); return; }
+    var tipo = el.querySelector("#np-tipo").value;
+    var pasadasSnap = await getDocs(collection(db, "proyectos", estado.proyecto.id, "pasadas"));
+    var siguienteIndex = pasadasSnap.docs.reduce(function (max, d) { return Math.max(max, d.data().index || 0); }, 0) + 1;
+    var id = slugificar(nombre) + "-" + siguienteIndex;
+    await setDoc(doc(db, "proyectos", estado.proyecto.id, "pasadas", id), {
+      index: siguienteIndex, tipo: tipo, etiquetaCorta: String(siguienteIndex), nombre: nombre, activo: false
+    });
+    registrar(estado.proyecto.id, { tipo: "fila_creada", resumen: "Fila creada: " + nombre + " (" + tipo + ")", autor: perfil.email });
+    el.querySelector("#np-nombre").value = "";
+  });
+}
+
+function cargarTelar(el, estado, perfil) {
   var unsubs = [];
-  var qPasadas = query(collection(db, "proyectos", estado.proyecto.id, "pasadas"), orderBy("index"));
+  var proyecto = estado.proyecto;
+  var qPasadas = query(collection(db, "proyectos", proyecto.id, "pasadas"), orderBy("index"));
   var unsub = onSnapshot(qPasadas, function (snap) {
     estado.pasadas = [];
     snap.forEach(function (d) { estado.pasadas.push(Object.assign({ id: d.id }, d.data())); });
-    renderCabecera(el.querySelector("#tj-cabecera"), estado.proyecto.urdimbre, { corner: "pasada", espacioNudos: estado.proyecto.espacioNudos });
-    estado.pasadas.forEach(function (p) { suscribirNudos(el, p, unsubs); });
-    pintar(el);
+    renderCabecera(el.querySelector("#ct-cabecera"), proyecto.urdimbre, { corner: "pasada", espacioNudos: proyecto.espacioNudos });
+    renderFilasLista(el, estado, perfil);
+    estado.pasadas.forEach(function (p) { suscribirNudos(el, estado, p, perfil, unsubs); });
+    pintar(el, estado, perfil);
   });
   unsubs.push(unsub);
   return function () { unsubs.forEach(function (u) { u(); }); };
 }
 
-function suscribirNudos(el, pasada, unsubs) {
+function renderFilasLista(el, estado, perfil) {
+  var cont = el.querySelector("#ct-filas-lista");
+  cont.innerHTML = estado.pasadas.map(function (p) {
+    return '<label style="display:flex;align-items:center;gap:8px;font-size:.82rem">' +
+      '<input type="checkbox" class="ct-fila-activa" data-pasada="' + p.id + '"' + (p.activo !== false ? " checked" : "") + '>' +
+      '<span class="tag">' + (p.tipo || "") + '</span> ' + (p.nombre || p.id) +
+    '</label>';
+  }).join("") || '<p class="estado-vacio">Todavía no hay filas. Agrega una arriba.</p>';
+
+  Array.prototype.forEach.call(cont.querySelectorAll("[data-pasada]"), function (chk) {
+    chk.addEventListener("change", function () {
+      setDoc(doc(db, "proyectos", estado.proyecto.id, "pasadas", chk.dataset.pasada), { activo: chk.checked }, { merge: true });
+      registrar(estado.proyecto.id, { tipo: "fila_activada", resumen: (chk.checked ? "Fila activada: " : "Fila desactivada: ") + chk.dataset.pasada, autor: perfil.email });
+    });
+  });
+}
+
+function suscribirNudos(el, estado, pasada, perfil, unsubs) {
   if (estado.suscritas[pasada.id]) return;
   estado.suscritas[pasada.id] = true;
   var col = collection(db, "proyectos", estado.proyecto.id, "pasadas", pasada.id, "nudos");
@@ -89,108 +163,313 @@ function suscribirNudos(el, pasada, unsubs) {
     var lista = [];
     snap.forEach(function (d) { lista.push(Object.assign({ id: d.id }, d.data())); });
     estado.nudosPorPasada[pasada.id] = lista;
-    pintar(el);
+    pintar(el, estado, perfil);
   });
   unsubs.push(unsub);
 }
 
-function pintar(el) {
-  renderCuerpo(el.querySelector("#tj-cuerpo"), estado.pasadas, estado.nudosPorPasada, {
+function agruparPorHilo(nudos) {
+  var m = {};
+  (nudos || []).forEach(function (n) { (m[n.hiloId] = m[n.hiloId] || []).push(n); });
+  return m;
+}
+
+function pintar(el, estado, perfil) {
+  renderCuerpo(el.querySelector("#ct-cuerpo"), estado.pasadas, estado.nudosPorPasada, {
     hilos: estado.proyecto.urdimbre,
-    apariencia: apariencia(),
+    apariencia: estado.proyecto,
     vacioInteractivo: true,
-    onNudoClick: function (nudo, pasada, hiloId, todos, btn) {
-      marcarActivo(el.querySelector("#tj-cuerpo"), btn);
-      abrirEditor(el, nudo, pasada, hiloId);
+    onNudoClick: function (nudo, pasada, hiloId, todos, btn, e) {
+      manejarClic(estado, pasada, hiloId, e);
+      pintarSeleccion(el, estado);
+      abrirEditor(el, estado, perfil);
     }
   });
-  // marca visualmente los nudos crudos
-  Array.prototype.forEach.call(el.querySelectorAll("[data-pasada][data-hilo]"), function (btn) {
-    var grupo = (agruparPorHilo(estado.nudosPorPasada[btn.dataset.pasada] || [])[btn.dataset.hilo] || []);
-    if (grupo.some(function (n) { return n.estado === "crudo"; })) btn.style.outline = "2px dashed var(--accent)";
-    else btn.style.outline = "";
+  pintarSeleccion(el, estado);
+  Array.prototype.forEach.call(el.querySelectorAll(".pasada[data-pasada]"), function (fila) {
+    var p = estado.pasadas.filter(function (x) { return x.id === fila.dataset.pasada; })[0];
+    fila.classList.toggle("inactiva", !!p && p.activo === false);
   });
 }
 
-function swatchesHTML(clase, valorActual, conVacio) {
-  var html = PALETA.map(function (c) {
-    return '<button type="button" class="swatch-btn ' + clase + '" data-hex="' + c.hex + '" title="' + c.id + '" ' +
-      'style="background:' + c.hex + '" aria-pressed="' + (valorActual === c.hex) + '"></button>';
-  }).join("");
-  if (conVacio) html += '<button type="button" class="swatch-btn vacio ' + clase + '" data-hex="" title="ninguno" aria-pressed="' + (!valorActual) + '"></button>';
-  return html;
+function pintarSeleccion(el, estado) {
+  Array.prototype.forEach.call(el.querySelectorAll("[data-pasada][data-hilo]"), function (btn) {
+    var esCrudo = (agruparPorHilo(estado.nudosPorPasada[btn.dataset.pasada] || [])[btn.dataset.hilo] || []).some(function (n) { return n.estado === "crudo"; });
+    btn.style.outline = esCrudo ? "2px dashed var(--accent)" : "";
+    btn.classList.toggle("seleccionado", estado.seleccion.indexOf(clave(btn.dataset.pasada, btn.dataset.hilo)) !== -1);
+  });
 }
 
-function abrirEditor(el, nudo, pasada, hiloId) {
-  var panel = el.querySelector("#tj-panel-body");
-  var n = Object.assign({ hiloId: hiloId, punto: "solido", tinte: "#e7ebe2", texto: "", estado: "tejido", giro: 0, espejo: false }, nudo || {});
+function manejarClic(estado, pasada, hiloId, e) {
+  var hilosContenido = estado.proyecto.urdimbre.filter(function (h) { return h.tipo === "contenido"; });
+  var rIdx = estado.pasadas.findIndex(function (p) { return p.id === pasada.id; });
+  var cIdx = hilosContenido.findIndex(function (h) { return h.id === hiloId; });
+  var k = clave(pasada.id, hiloId);
+
+  if (e && e.shiftKey && estado.ancla) {
+    var r0 = Math.min(estado.ancla.rIdx, rIdx), r1 = Math.max(estado.ancla.rIdx, rIdx);
+    var c0 = Math.min(estado.ancla.cIdx, cIdx), c1 = Math.max(estado.ancla.cIdx, cIdx);
+    estado.seleccion = [];
+    for (var r = r0; r <= r1; r++) {
+      for (var c = c0; c <= c1; c++) {
+        var p = estado.pasadas[r], h = hilosContenido[c];
+        if (p && h) estado.seleccion.push(clave(p.id, h.id));
+      }
+    }
+  } else if (e && (e.ctrlKey || e.metaKey)) {
+    var idx = estado.seleccion.indexOf(k);
+    if (idx === -1) estado.seleccion.push(k); else estado.seleccion.splice(idx, 1);
+    estado.ancla = { rIdx: rIdx, cIdx: cIdx };
+  } else {
+    estado.seleccion = [k];
+    estado.ancla = { rIdx: rIdx, cIdx: cIdx };
+  }
+}
+
+function nudoDe(estado, pasadaId, hiloId) {
+  return (agruparPorHilo(estado.nudosPorPasada[pasadaId] || [])[hiloId] || [])[0] || null;
+}
+
+function estiloPickerHTML(estilos, estiloActualId) {
+  var opciones = [{ id: "", nombre: "Manual", manual: true }].concat(estilos);
+  return '<div class="estilos-grid">' + opciones.map(function (es) {
+    return '<button type="button" class="estilo-btn" data-id="' + es.id + '" aria-pressed="' + (es.manual ? !estiloActualId : estiloActualId === es.id) + '" title="' + es.nombre + '">' +
+      '<span class="estilo-btn-preview">' + (es.manual ? "" : dibujarNudo(es)) + '</span>' +
+      '<span class="estilo-btn-nombre">' + es.nombre + '</span></button>';
+  }).join("") + '</div>';
+}
+
+/* ================= editor: 1 nudo (edición completa, autoguardado) o varios (aplicar estilo/giro en bloque) ================= */
+function abrirEditor(el, estado, perfil) {
+  var panel = el.querySelector("#ct-panel-body");
+  if (estado.seleccion.length === 0) {
+    panel.innerHTML = '<p class="estado-vacio">Toca un nudo para editarlo.</p>';
+    return;
+  }
+  if (estado.seleccion.length === 1) {
+    var partes = estado.seleccion[0].split("|");
+    abrirEditorUno(panel, el, estado, perfil, partes[0], partes[1]);
+  } else {
+    abrirEditorMultiple(panel, el, estado, perfil);
+  }
+}
+
+function refPara(estado, pasadaId, hiloId, nudo) {
+  var col = collection(db, "proyectos", estado.proyecto.id, "pasadas", pasadaId, "nudos");
+  return nudo ? doc(col, nudo.id) : doc(col, "directo_" + hiloId);
+}
+
+function abrirEditorUno(panel, el, estado, perfil, pasadaId, hiloId) {
+  var pasada = estado.pasadas.filter(function (p) { return p.id === pasadaId; })[0] || {};
+  var nudo = nudoDe(estado, pasadaId, hiloId);
+  var n = Object.assign({ hiloId: hiloId, punto: "solido", tinte: "#3a402f", texto: "", titulo: "", estado: "tejido", giro: 0, espejo: false }, nudo || {});
+  var estiloActual = estado.estilos.filter(function (es) { return es.punto === n.punto && es.tinte === n.tinte && es.matiz === n.matiz; })[0];
+
   panel.innerHTML =
     '<div class="eyebrow">' + (pasada.nombre || pasada.etiquetaCorta) + " · hilo " + hiloId + "</div>" +
-    '<div class="field"><label>Punto</label><select id="e-punto">' +
-      PUNTOS.map(function (p) { return '<option value="' + p.id + '"' + (n.punto === p.id ? " selected" : "") + '>' + p.nombre + "</option>"; }).join("") +
-    '</select></div>' +
-    '<div class="field"><label>Tinte</label><div class="swatches" id="e-tinte-cont">' + swatchesHTML("e-tinte", n.tinte, false) + '</div></div>' +
-    '<div class="field"><label>Matiz</label><div class="swatches" id="e-matiz-cont">' + swatchesHTML("e-matiz", n.matiz, true) + '</div></div>' +
-    '<div class="field"><label>Título (opcional)</label><input id="e-titulo" value="' + (n.titulo || "") + '"></div>' +
-    '<div class="field"><label>Texto</label><textarea id="e-texto" maxlength="180">' + (n.texto || "") + '</textarea></div>' +
+    '<div class="mini-preview" style="width:60px;height:60px;margin-bottom:10px">' + dibujarNudo(n) + '</div>' +
+    '<div class="field"><label>Estilo</label>' + estiloPickerHTML(estado.estilos, estiloActual && estiloActual.id) + '</div>' +
+    '<div class="pair">' +
+      '<button class="btn e-girar">Girar 90° (' + (n.giro || 0) + '°)</button>' +
+      '<button class="btn e-espejo" aria-pressed="' + !!n.espejo + '">Espejo: ' + (n.espejo ? "sí" : "no") + '</button>' +
+    '</div>' +
+    '<div class="field"><label>Título</label><input id="e-titulo" value="' + (n.titulo || "") + '"></div>' +
+    '<div class="field"><label>Descripción</label><textarea id="e-texto" maxlength="220">' + (n.texto || "") + '</textarea></div>' +
+    '<div class="field"><label>Imagen (URL, opcional)</label><input id="e-imagen" value="' + (n.imagenUrl || "") + '"></div>' +
+    '<div class="field"><label>Enlace (URL, opcional)</label><input id="e-enlace" value="' + (n.enlaceUrl || "") + '"></div>' +
     '<div class="field"><label>Estado</label><select id="e-estado">' +
       '<option value="tejido"' + (n.estado === "tejido" ? " selected" : "") + '>Tejido (público)</option>' +
       '<option value="crudo"' + (n.estado === "crudo" ? " selected" : "") + '>Crudo (en cola)</option>' +
     '</select></div>' +
-    '<button class="btn primary" id="e-guardar">Guardar</button> ' +
-    (nudo ? '<button class="btn" id="e-borrar">Borrar</button>' : "");
+    (nudo ? '<button class="btn" id="e-borrar">Borrar</button>' : '<p class="ghost">Se crea apenas escribes algo.</p>');
 
-  var seleccion = { tinte: n.tinte, matiz: n.matiz };
-  ["tinte", "matiz"].forEach(function (campo) {
-    Array.prototype.forEach.call(panel.querySelectorAll(".e-" + campo), function (b) {
-      b.addEventListener("click", function () {
-        Array.prototype.forEach.call(panel.querySelectorAll(".e-" + campo), function (o) { o.setAttribute("aria-pressed", "false"); });
-        b.setAttribute("aria-pressed", "true");
-        seleccion[campo] = b.dataset.hex || null;
-      });
+  var local = { punto: n.punto, tinte: n.tinte, matiz: n.matiz, giro: n.giro || 0, espejo: !!n.espejo };
+  var ref = refPara(estado, pasadaId, hiloId, nudo);
+  var registrarDebounce = null;
+
+  function guardar(cambios) {
+    Object.assign(local, cambios);
+    setDoc(ref, Object.assign({
+      hiloId: hiloId,
+      titulo: panel.querySelector("#e-titulo").value.trim(),
+      texto: panel.querySelector("#e-texto").value.trim(),
+      imagenUrl: panel.querySelector("#e-imagen").value.trim(),
+      enlaceUrl: panel.querySelector("#e-enlace").value.trim(),
+      estado: panel.querySelector("#e-estado").value,
+      fuente: n.fuente || "directo", eco: n.eco || false
+    }, local), { merge: true });
+    panel.querySelector(".mini-preview").innerHTML = dibujarNudo(local);
+    clearTimeout(registrarDebounce);
+    registrarDebounce = setTimeout(function () {
+      registrar(estado.proyecto.id, { tipo: "nudo_editado", resumen: "Nudo editado en " + pasadaId + "/" + hiloId, autor: (perfil && perfil.email) || "" });
+    }, 800);
+  }
+
+  Array.prototype.forEach.call(panel.querySelectorAll(".estilo-btn"), function (b) {
+    b.addEventListener("click", function () {
+      Array.prototype.forEach.call(panel.querySelectorAll(".estilo-btn"), function (o) { o.setAttribute("aria-pressed", "false"); });
+      b.setAttribute("aria-pressed", "true");
+      if (b.dataset.id) {
+        var es = estado.estilos.filter(function (x) { return x.id === b.dataset.id; })[0];
+        if (es) guardar({ punto: es.punto, tinte: es.tinte, matiz: es.matiz });
+      }
     });
   });
-
-  panel.querySelector("#e-guardar").addEventListener("click", async function () {
-    var ref = nudo
-      ? doc(db, "proyectos", estado.proyecto.id, "pasadas", pasada.id, "nudos", nudo.id)
-      : doc(collection(db, "proyectos", estado.proyecto.id, "pasadas", pasada.id, "nudos"));
-    await setDoc(ref, {
-      hiloId: hiloId,
-      punto: panel.querySelector("#e-punto").value,
-      tinte: seleccion.tinte,
-      matiz: seleccion.matiz,
-      giro: n.giro || 0,
-      espejo: !!n.espejo,
-      titulo: panel.querySelector("#e-titulo").value,
-      texto: panel.querySelector("#e-texto").value,
-      estado: panel.querySelector("#e-estado").value,
-      fuente: n.fuente || "directo",
-      eco: n.eco || false
-    }, { merge: true });
+  panel.querySelector(".e-girar").addEventListener("click", function () {
+    var giro = (local.giro + 90) % 360;
+    this.textContent = "Girar 90° (" + giro + "°)";
+    guardar({ giro: giro });
   });
+  panel.querySelector(".e-espejo").addEventListener("click", function () {
+    var espejo = !local.espejo;
+    this.setAttribute("aria-pressed", espejo);
+    this.textContent = "Espejo: " + (espejo ? "sí" : "no");
+    guardar({ espejo: espejo });
+  });
+  ["#e-titulo", "#e-texto", "#e-imagen", "#e-enlace"].forEach(function (sel) {
+    panel.querySelector(sel).addEventListener("input", function () { guardar({}); });
+  });
+  panel.querySelector("#e-estado").addEventListener("change", function () { guardar({}); });
   if (nudo) {
     panel.querySelector("#e-borrar").addEventListener("click", async function () {
-      await deleteDoc(doc(db, "proyectos", estado.proyecto.id, "pasadas", pasada.id, "nudos", nudo.id));
+      await deleteDoc(ref);
+      estado.seleccion = [];
+      panel.innerHTML = '<p class="estado-vacio">Toca un nudo para editarlo.</p>';
     });
   }
 }
 
-function cargarCola(el, unsubs) {
-  var contenedor = el.querySelector("#lista-cola-tj");
+function abrirEditorMultiple(panel, el, estado, perfil) {
+  var n = estado.seleccion.length;
+  panel.innerHTML =
+    '<div class="eyebrow">' + n + ' nudos seleccionados</div>' +
+    '<p class="ghost" style="margin-bottom:10px">Elige un estilo o gira/espeja: se aplica a los ' + n + ' de una vez.</p>' +
+    '<div class="field"><label>Estilo</label>' + estiloPickerHTML(estado.estilos, null) + '</div>' +
+    '<div class="pair">' +
+      '<button class="btn m-girar">Girar 90° todos</button>' +
+      '<button class="btn m-espejo">Alternar espejo</button>' +
+    '</div>' +
+    '<button class="btn" id="m-limpiar" style="margin-top:10px">Quitar selección</button>';
+
+  function paraCadaSeleccionado(fn) {
+    estado.seleccion.forEach(function (k) {
+      var partes = k.split("|");
+      var pasadaId = partes[0], hiloId = partes[1];
+      var nudo = nudoDe(estado, pasadaId, hiloId);
+      fn(pasadaId, hiloId, nudo);
+    });
+  }
+
+  Array.prototype.forEach.call(panel.querySelectorAll(".estilo-btn"), function (b) {
+    if (!b.dataset.id) return;
+    b.addEventListener("click", function () {
+      var es = estado.estilos.filter(function (x) { return x.id === b.dataset.id; })[0];
+      if (!es) return;
+      paraCadaSeleccionado(function (pasadaId, hiloId, nudo) {
+        var ref = refPara(estado, pasadaId, hiloId, nudo);
+        setDoc(ref, {
+          hiloId: hiloId, punto: es.punto, tinte: es.tinte, matiz: es.matiz,
+          estado: (nudo && nudo.estado) || "tejido", fuente: (nudo && nudo.fuente) || "directo", eco: (nudo && nudo.eco) || false
+        }, { merge: true });
+      });
+      registrar(estado.proyecto.id, { tipo: "nudo_editado", resumen: "Estilo aplicado a " + n + " nudos (" + es.nombre + ")", autor: (perfil && perfil.email) || "" });
+    });
+  });
+  panel.querySelector(".m-girar").addEventListener("click", function () {
+    paraCadaSeleccionado(function (pasadaId, hiloId, nudo) {
+      var ref = refPara(estado, pasadaId, hiloId, nudo);
+      var giro = (((nudo && nudo.giro) || 0) + 90) % 360;
+      setDoc(ref, { hiloId: hiloId, giro: giro }, { merge: true });
+    });
+  });
+  panel.querySelector(".m-espejo").addEventListener("click", function () {
+    paraCadaSeleccionado(function (pasadaId, hiloId, nudo) {
+      var ref = refPara(estado, pasadaId, hiloId, nudo);
+      setDoc(ref, { hiloId: hiloId, espejo: !(nudo && nudo.espejo) }, { merge: true });
+    });
+  });
+  panel.querySelector("#m-limpiar").addEventListener("click", function () {
+    estado.seleccion = [];
+    pintarSeleccion(el, estado);
+    abrirEditor(el, estado, perfil);
+  });
+}
+
+/* ================= ESTILO DE MESAS NUEVAS ================= */
+export function renderMesasNuevas(el, perfil, unsubs) {
+  el.innerHTML = '<div id="mn-selector" style="margin-bottom:14px"></div><div id="mn-cuerpo"></div>';
+  var unsubEstilos = null;
+  var unsubSel = renderSelectorTelar(el.querySelector("#mn-selector"), function (proyecto) {
+    if (unsubEstilos) unsubEstilos();
+    unsubEstilos = suscribirEstilos(proyecto.id, function (estilos) {
+      cargarSelectorEstilos(el.querySelector("#mn-cuerpo"), proyecto, estilos, perfil);
+    });
+  });
+  unsubs.push(unsubSel);
+  unsubs.push(function () { if (unsubEstilos) unsubEstilos(); });
+}
+
+function cargarSelectorEstilos(el, proyecto, estilos, perfil) {
+  var actual = proyecto.estiloPorCategoria || {};
+  el.innerHTML =
+    '<p class="ghost" style="margin-bottom:12px">Así se van a ver las mesas que los hiladores llenen desde ahora. El hilador no elige apariencia: solo escribe.</p>' +
+    CATEGORIAS.map(function (cat) {
+      return '<div class="field" style="max-width:360px"><label>' + cat.charAt(0).toUpperCase() + cat.slice(1) + '</label>' +
+        '<select class="mn-select" data-categoria="' + cat + '">' +
+          '<option value="">— usar por defecto —</option>' +
+          estilos.map(function (es) { return '<option value="' + es.id + '"' + (actual[cat] === es.id ? " selected" : "") + '>' + es.nombre + "</option>"; }).join("") +
+        '</select></div>';
+    }).join("") +
+    '<div id="mn-preview" style="margin-top:16px;max-width:360px"></div>';
+
+  function estiloDe(cat) { return resolverEstiloCategoria(estilos, proyecto.estiloPorCategoria, cat); }
+  function repintar() {
+    var html = '<div class="telar" style="padding:10px;display:flex;gap:0px">';
+    ["c1", "c2", "c3", "c4", "c5", "c6"].forEach(function (hiloId, i) {
+      var cat = i < 2 ? "desafio" : i < 4 ? "aporte" : "cambio";
+      var par = PARES_MESA[Math.floor(i / 2)];
+      var es = estiloDe(cat);
+      html += '<span class="nudo" style="width:44px;height:44px;background:' + es.tinte + '" aria-hidden="true">' +
+        dibujarNudo({ punto: es.punto, tinte: es.tinte, matiz: es.matiz, giro: par.giro, espejo: par.espejo }) + "</span>";
+    });
+    html += "</div>";
+    el.querySelector("#mn-preview").innerHTML = html;
+  }
+  repintar();
+
+  Array.prototype.forEach.call(el.querySelectorAll(".mn-select"), function (sel) {
+    sel.addEventListener("change", function () {
+      var nuevo = Object.assign({}, proyecto.estiloPorCategoria || {});
+      nuevo[sel.dataset.categoria] = sel.value || null;
+      proyecto.estiloPorCategoria = nuevo;
+      setDoc(doc(db, "proyectos", proyecto.id), { estiloPorCategoria: nuevo }, { merge: true });
+      registrar(proyecto.id, { tipo: "estilo_mesa_actualizado", resumen: "Estilo de mesas nuevas actualizado (" + sel.dataset.categoria + ")", autor: perfil.email });
+      repintar();
+    });
+  });
+}
+
+/* ================= COLA DE MODERACIÓN ================= */
+export function renderCola(el, unsubs) {
+  el.innerHTML = '<div id="lista-cola"></div>';
   var q = query(collectionGroup(db, "nudos"), where("estado", "==", "crudo"));
   var unsub = onSnapshot(q, function (snap) {
-    if (snap.empty) { contenedor.innerHTML = '<p class="estado-vacio">No hay nudos crudos pendientes.</p>'; return; }
+    if (snap.empty) {
+      el.querySelector("#lista-cola").innerHTML = '<p class="estado-vacio">No hay nudos crudos pendientes.</p>';
+      return;
+    }
     var html = "";
     snap.forEach(function (d) {
       var n = d.data();
+      var pasadaId = d.ref.parent.parent.id;
       html += '<div class="card" style="margin-bottom:10px" data-ref="' + d.ref.path + '">' +
         '<p class="cita">“' + n.texto + '”</p>' +
-        '<div class="meta"><span class="tag">Hilo ' + n.hiloId + '</span></div>' +
-        '<button class="btn primary btn-aprobar">Tejer</button> <button class="btn btn-descartar">Descartar</button></div>';
+        '<div class="meta"><span class="tag">Pasada ' + pasadaId + '</span><span class="tag">Hilo ' + n.hiloId + '</span></div>' +
+        '<button class="btn primary btn-aprobar">Tejer (aprobar)</button> ' +
+        '<button class="btn btn-descartar">Descartar</button></div>';
     });
-    contenedor.innerHTML = html;
-    Array.prototype.forEach.call(contenedor.querySelectorAll("[data-ref]"), function (card) {
+    el.querySelector("#lista-cola").innerHTML = html;
+    Array.prototype.forEach.call(el.querySelectorAll("[data-ref]"), function (card) {
       var ref = doc(db, card.dataset.ref);
       card.querySelector(".btn-aprobar").addEventListener("click", function () { updateDoc(ref, { estado: "tejido" }); });
       card.querySelector(".btn-descartar").addEventListener("click", function () { deleteDoc(ref); });

@@ -117,7 +117,7 @@ img,svg{max-width:100%}
 @media(min-width:560px){.pasada-etiqueta{font-size:.66rem}}
 
 .nudo{position:relative;aspect-ratio:1/1;border:0;padding:0;background:transparent;display:block;
-  overflow:hidden;border-radius:3px;transition:transform var(--dur) var(--ease)}
+  overflow:hidden;transition:transform var(--dur) var(--ease)}
 .nudo .fondo{position:absolute;inset:0}
 .nudo:hover,.nudo:focus-visible{transform:scale(1.08);z-index:3}
 .nudo.activo{transform:scale(1.08);z-index:3;box-shadow:0 0 0 2px var(--fg-strong)}
@@ -171,6 +171,21 @@ img,svg{max-width:100%}
   position:relative}
 .swatch-btn.vacio::after{content:"×";position:absolute;inset:0;display:flex;align-items:center;
   justify-content:center;color:var(--fg-soft);font-size:.8rem}
+
+/* ---------- selector de estilo (clic, no dropdown) ---------- */
+.estilos-grid{display:flex;flex-wrap:wrap;gap:8px}
+.estilo-btn{width:58px;display:flex;flex-direction:column;align-items:center;gap:4px;
+  background:transparent;border:0;cursor:pointer;padding:4px;border-radius:8px;
+  transition:transform var(--dur) var(--ease)}
+.estilo-btn:hover{transform:scale(1.06)}
+.estilo-btn-preview{width:40px;height:40px;border-radius:6px;overflow:hidden;
+  box-shadow:0 0 0 1px var(--line-strong);background:var(--bg-soft)}
+.estilo-btn[aria-pressed="true"] .estilo-btn-preview{box-shadow:0 0 0 2px var(--accent)}
+.estilo-btn-nombre{font-size:.6rem;text-align:center;color:var(--fg-soft);line-height:1.15}
+
+/* ---------- selección múltiple en la grilla (estilo Excel) ---------- */
+.nudo.seleccionado{box-shadow:0 0 0 2px var(--accent);z-index:3}
+.pasada.inactiva{outline:2px dashed var(--fg-soft);outline-offset:2px}
 
 /* ---------- checklist de composición ---------- */
 .checklist{display:grid;gap:8px;grid-template-columns:1fr}

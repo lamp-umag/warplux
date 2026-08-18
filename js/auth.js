@@ -7,24 +7,28 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 /* =========================================================
-   Roles del telar, siguiendo el léxico:
-   maestra_tejedora > urdidor > tejedor > hilador
-   (no existe rol "visitante": quien no tiene rol asignado
-   simplemente no entra al taller; el telar público no
-   requiere rol ni sesión)
+   Roles del telar: urdidor > tejedor > hilador.
+   urdidor puede hacer todo (incluido lo de tejedor e hilador)
+   y además puede "ver como" cualquier rol para probar su vista.
+   Quien no tiene rol asignado no entra al taller; el telar
+   público no requiere rol ni sesión.
    ========================================================= */
-export var ROLES = ["maestra_tejedora", "urdidor", "tejedor", "hilador"];
+export var ROLES = ["urdidor", "tejedor", "hilador"];
 
 export var ROL_LABEL = {
-  maestra_tejedora: "Maestra tejedora",
   urdidor: "Urdidor/a",
   tejedor: "Tejedor/a",
-  hilador: "Hilador/a"
+  hilador: "Hilador/a",
+  maestra_tejedora: "Urdidor/a" // alias de despliegue viejo, solo para mostrar
 };
 
 // Bootstrap: mientras usuarios_roles esté vacío, este correo siempre entra
-// como maestra tejedora. En cuanto exista su doc en usuarios_roles, ese doc manda.
-var MAESTRA_BOOTSTRAP = "hermanelgueta@gmail.com";
+// como urdidor. En cuanto exista su doc en usuarios_roles, ese doc manda.
+var URDIDOR_BOOTSTRAP = "hermanelgueta@gmail.com";
+
+// Migración: cuentas creadas antes de simplificar a 3 roles todavía tienen
+// el nombre viejo guardado en Firestore. Se traduce al leer, sin tocar datos.
+var ROL_MIGRACION = { maestra_tejedora: "urdidor" };
 
 var VER_COMO_KEY = "warplux_ver_como";
 
@@ -46,8 +50,8 @@ export function signOutUser() {
 
 /**
  * Resuelve el perfil del usuario actual: rol real (desde usuarios_roles,
- * con bootstrap para la maestra) y rol efectivo (aplica el "ver como" si
- * la maestra lo activó para probar la interfaz de otro rol).
+ * con bootstrap para el urdidor) y rol efectivo (aplica el "ver como" si
+ * el urdidor lo activó para probar la interfaz de otro rol).
  * rolReal/rolEfectivo son null cuando la cuenta no tiene rol asignado.
  */
 export async function resolverPerfil(user) {
@@ -61,19 +65,20 @@ export async function resolverPerfil(user) {
 
   if (snap.exists()) {
     rolReal = snap.data().rol || null;
-  } else if (email === MAESTRA_BOOTSTRAP) {
-    rolReal = "maestra_tejedora";
-    // Deja registro persistente apenas la maestra bootstrap entra la primera vez.
+    rolReal = ROL_MIGRACION[rolReal] || rolReal;
+  } else if (email === URDIDOR_BOOTSTRAP) {
+    rolReal = "urdidor";
+    // Deja registro persistente apenas el urdidor bootstrap entra la primera vez.
     try {
       await setDoc(ref, {
-        rol: "maestra_tejedora",
+        rol: "urdidor",
         nombre: user.displayName || email,
         creadoEn: new Date().toISOString()
       });
     } catch (e) { /* si las reglas ya están cerradas, no pasa nada grave */ }
   }
 
-  var verComo = rolReal === "maestra_tejedora" ? getVerComo() : null;
+  var verComo = rolReal === "urdidor" ? getVerComo() : null;
   var rolEfectivo = verComo || rolReal;
 
   return {

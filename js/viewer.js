@@ -67,7 +67,10 @@ async function cargarProyecto() {
   var qPasadas = query(collection(db, "proyectos", slug, "pasadas"), orderBy("index"));
   onSnapshot(qPasadas, function (snap) {
     estado.pasadas = [];
-    snap.forEach(function (d) { estado.pasadas.push(Object.assign({ id: d.id }, d.data())); });
+    snap.forEach(function (d) {
+      var p = Object.assign({ id: d.id }, d.data());
+      if (p.activo !== false) estado.pasadas.push(p); // fila desactivada por el urdidor: no se muestra
+    });
     estado.pasadas.forEach(suscribirNudos);
     renderCabeceraTop();
     renderTodo();

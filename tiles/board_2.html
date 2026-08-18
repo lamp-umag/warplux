@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tile board</title>
+<style>
+  :root {
+    --forest:#3a402f; --olive:#85751a; --amber:#e29f3e; --rust:#bb6f3a; --cream:#f2f1ed;
+    --cell: 56px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background:#ffffff; color:#222; font-family: Georgia, "Times New Roman", serif;
+    margin:0; padding:36px 48px 80px;
+  }
+  h1 { font-size:20px; font-weight:normal; margin:0 0 4px; }
+  h2 { font-size:13px; font-weight:normal; text-transform:uppercase; letter-spacing:0.07em; color:#888; margin:0 0 10px; }
+  p.hint { font-size:13px; color:#666; max-width:640px; margin:0 0 24px; }
+  .panel {
+    display:flex; gap:28px; flex-wrap:wrap; align-items:flex-end;
+    border:1px solid #e2e2e2; padding:18px 20px; margin-bottom:20px;
+  }
+  .field { display:flex; flex-direction:column; gap:6px; font-size:12px; color:#555; }
+  .field input, .field select {
+    font-family:monospace; font-size:13px; padding:5px 6px; border:1px solid #ccc; background:#fff;
+  }
+  .field input[type=number] { width:64px; }
+  button {
+    font-family:Georgia, serif; font-size:13px; padding:7px 14px; border:1px solid #333;
+    background:#fff; color:#222; cursor:pointer;
+  }
+  button:hover { background:#f2f2f2; }
+  button.preset { border-color:#999; }
+
+  .presets {
+    display:flex; gap:10px; flex-wrap:wrap; margin-bottom:28px;
+  }
+
+  .tray {
+    display:flex; gap:14px; align-items:center; margin-bottom:28px; flex-wrap:wrap;
+  }
+  .tray .piece {
+    width:56px; height:56px; border:1px solid #ddd; cursor:grab; background:#fafafa;
+  }
+  .tray .piece svg { width:100%; height:100%; display:block; }
+
+  #board {
+    display:grid;
+    grid-template-columns: repeat(var(--cols), var(--cell));
+    grid-auto-rows: var(--cell);
+    border-left:1px solid #ccc; border-top:1px solid #ccc;
+    width:max-content;
+  }
+  .cell {
+    width:var(--cell); height:var(--cell);
+    border-right:1px solid #ccc; border-bottom:1px solid #ccc;
+    background:#fff;
+    position:relative;
+  }
+  .cell.over { background:#f0f0e8; }
+  .cell svg {
+    width:100%; height:100%; display:block;
+    transition: transform 0.12s ease;
+  }
+  .legend { margin-top:26px; font-size:12px; color:#777; max-width:640px; }
+</style>
+</head>
+<body>
+
+<h1>Tile board</h1>
+<p class="hint">
+Drag a shape from the tray onto the grid, or click a preset to fill the whole board with a
+repeating pattern. Click a placed tile to rotate it 90 degrees. Double click a tile to clear
+it. Color A and Color B set the colors for the next piece you drag in from the tray only.
+</p>
+
+<div class="panel">
+  <div class="field">
+    <label for="cols">columns (4-9)</label>
+    <input type="number" id="cols" min="4" max="9" value="8">
+  </div>
+  <div class="field">
+    <label for="rows">rows (3-99)</label>
+    <input type="number" id="rows" min="3" max="99" value="8">
+  </div>
+  <button id="apply">Rebuild board</button>
+  <button id="clearAll">Clear board</button>
+  <div class="field">
+    <label for="colorA">color A</label>
+    <select id="colorA"></select>
+  </div>
+  <div class="field">
+    <label for="colorB">color B</label>
+    <select id="colorB"></select>
+  </div>
+</div>
+
+<h2>Presets</h2>
+<div class="presets" id="presets"></div>
+
+<h2>Tray</h2>
+<div class="tray" id="tray"></div>
+
+<div id="board"></div>
+
+<p class="legend">
+Shapes: arc-tl, arc-tr, arc-bl, arc-br are quarter circles anchored at that corner.
+diag-tlbr and diag-trbl are corner to corner triangle splits. solid is a flat fill.
+Presets tile by row and column remainder, so they repeat cleanly at any board size.
+</p>
+
+<script>
+const PALETTE = {
+  forest: '#3a402f',
+  olive:  '#85751a',
+  amber:  '#e29f3e',
+  rust:   '#bb6f3a',
+  cream:  '#f2f1ed'
+};
+
+const SHAPES = {
+  'arc-tl':    '<rect width="100" height="100" fill="{b}"/><path d="M0,0 L100,0 A100,100 0 0 1 0,100 Z" fill="{a}"/>',
+  'arc-tr':    '<rect width="100" height="100" fill="{b}"/><path d="M100,0 L100,100 A100,100 0 0 1 0,0 Z" fill="{a}"/>',
+  'arc-bl':    '<rect width="100" height="100" fill="{b}"/><path d="M0,100 L0,0 A100,100 0 0 1 100,100 Z" fill="{a}"/>',
+  'arc-br':    '<rect width="100" height="100" fill="{b}"/><path d="M100,100 L0,100 A100,100 0 0 1 100,0 Z" fill="{a}"/>',
+  'diag-tlbr': '<path d="M0,0 L100,0 L100,100 Z" fill="{b}"/><path d="M0,0 L100,100 L0,100 Z" fill="{a}"/>',
+  'diag-trbl': '<path d="M0,0 L100,0 L0,100 Z" fill="{b}"/><path d="M100,0 L100,100 L0,100 Z" fill="{a}"/>',
+  'solid':     '<rect width="100" height="100" fill="{a}"/>'
+};
+
+function hexOf(name) { return PALETTE[name]; }
+
+function svgFor(id, a, b) {
+  const inner = SHAPES[id].replaceAll('{a}', a).replaceAll('{b}', b);
+  return '<svg viewBox="0 0 100 100" data-shape="' + id + '">' + inner + '</svg>';
+}
+
+// --- presets taken directly from MINI-03.png and PENDON-01.png, matched tile by tile ---
+const IMAGE_PRESETS = {"mini":[[["arc-tl","forest","olive"],["diag-trbl","amber","olive"],["diag-tlbr","olive","forest"],["arc-tr","rust","forest"],["arc-tl","forest","olive"],["diag-trbl","amber","olive"],["diag-tlbr","olive","forest"],["arc-tr","amber","forest"]],[["arc-tr","forest","olive"],["diag-trbl","olive","amber"],["diag-tlbr","forest","olive"],["arc-tl","amber","forest"],["arc-tr","forest","olive"],["diag-trbl","olive","amber"],["diag-tlbr","forest","olive"],["arc-tl","amber","forest"]],[["arc-tl","forest","olive"],["diag-trbl","amber","olive"],["diag-tlbr","olive","forest"],["arc-tr","rust","forest"],["arc-tl","forest","olive"],["diag-trbl","amber","olive"],["diag-tlbr","olive","forest"],["arc-tr","amber","forest"]],[["arc-tr","forest","olive"],["diag-trbl","olive","amber"],["diag-tlbr","forest","olive"],["arc-tl","amber","forest"],["arc-tr","forest","olive"],["diag-trbl","olive","amber"],["diag-tlbr","forest","olive"],["arc-tl","amber","forest"]],[["arc-tl","forest","olive"],["diag-trbl","amber","olive"],["diag-tlbr","olive","forest"],["arc-tr","rust","forest"],["arc-tl","forest","olive"],["diag-trbl","amber","olive"],["diag-tlbr","olive","forest"],["arc-tr","amber","forest"]],[["arc-tr","forest","olive"],["diag-trbl","olive","amber"],["diag-tlbr","forest","olive"],["arc-tl","amber","forest"],["arc-tr","forest","olive"],["diag-trbl","olive","amber"],["diag-tlbr","forest","olive"],["arc-tl","amber","forest"]],[["arc-tl","forest","olive"],["diag-trbl","amber","olive"],["diag-tlbr","olive","forest"],["arc-tr","rust","forest"],["arc-tl","forest","olive"],["diag-trbl","amber","olive"],["diag-tlbr","olive","forest"],["arc-tr","amber","forest"]],[["arc-tr","forest","olive"],["diag-trbl","olive","amber"],["diag-tlbr","forest","olive"],["arc-tl","amber","forest"],["arc-tr","forest","olive"],["diag-trbl","olive","amber"],["diag-tlbr","forest","olive"],["arc-tl","amber","forest"]]],"pendon":[[["arc-bl","amber","cream"],["diag-tlbr","cream","rust"],["diag-trbl","cream","amber"],["arc-br","rust","cream"],["arc-bl","amber","cream"],["diag-tlbr","cream","rust"],["diag-trbl","cream","amber"],["arc-br","rust","cream"]],[["arc-br","amber","forest"],["diag-tlbr","olive","forest"],["diag-trbl","amber","olive"],["arc-bl","forest","olive"],["arc-br","amber","forest"],["diag-tlbr","olive","forest"],["diag-trbl","amber","olive"],["arc-bl","forest","olive"]],[["arc-bl","amber","forest"],["diag-tlbr","forest","olive"],["diag-trbl","olive","amber"],["arc-br","forest","olive"],["arc-bl","amber","forest"],["diag-tlbr","forest","olive"],["diag-trbl","olive","amber"],["arc-br","forest","olive"]]]};
+
+// --- a few generative, infinitely tessellating presets, defined as functions of (row,col) ---
+const GENERATIVE_PRESETS = {
+  checkerboard: (r,c) => ['solid', (r+c)%2===0 ? 'forest' : 'amber', (r+c)%2===0 ? 'forest' : 'amber'],
+  bubbles: (r,c) => {
+    const key = (((r%2)+2)%2) + ',' + (((c%2)+2)%2);
+    const map = {'0,0':'arc-br','0,1':'arc-bl','1,0':'arc-tr','1,1':'arc-tl'};
+    return [map[key], 'cream', 'rust'];
+  },
+  diamonds: (r,c) => {
+    const key = (((r%2)+2)%2) + ',' + (((c%2)+2)%2);
+    const map = {'0,0':'diag-trbl','0,1':'diag-tlbr','1,0':'diag-tlbr','1,1':'diag-trbl'};
+    return [map[key], 'olive', 'amber'];
+  },
+  pinwheel: (r,c) => {
+    const order = ['arc-tl','arc-tr','arc-br','arc-bl'];
+    const shape = order[(((r+c)%4)+4)%4];
+    return [shape, (r%2===0) ? 'forest' : 'olive', 'amber'];
+  },
+  weave: (r,c) => {
+    const shape = (r+c)%2===0 ? 'diag-tlbr' : 'diag-trbl';
+    const a = (r%2===0) ? 'rust' : 'amber';
+    return [shape, a, 'cream'];
+  }
+};
+
+function presetCell(presetId, r, c) {
+  if (IMAGE_PRESETS[presetId]) {
+    const grid = IMAGE_PRESETS[presetId];
+    const gr = grid.length, gc = grid[0].length;
+    const cellData = grid[r % gr][c % gc];
+    return [cellData[0], hexOf(cellData[1]), hexOf(cellData[2])];
+  }
+  const fn = GENERATIVE_PRESETS[presetId];
+  const cellData = fn(r,c);
+  return [cellData[0], hexOf(cellData[1]), hexOf(cellData[2])];
+}
+
+const PRESET_LABELS = {
+  mini: 'MINI-03',
+  pendon: 'PENDON-01',
+  checkerboard: 'Checkerboard',
+  bubbles: 'Bubbles',
+  diamonds: 'Diamonds',
+  pinwheel: 'Pinwheel',
+  weave: 'Weave'
+};
+
+const colorA = document.getElementById('colorA');
+const colorB = document.getElementById('colorB');
+for (const [name, h] of Object.entries(PALETTE)) {
+  const optA = document.createElement('option');
+  optA.value = h; optA.textContent = name;
+  colorA.appendChild(optA);
+  const optB = document.createElement('option');
+  optB.value = h; optB.textContent = name;
+  colorB.appendChild(optB);
+}
+colorA.value = PALETTE.forest;
+colorB.value = PALETTE.olive;
+
+const tray = document.getElementById('tray');
+function renderTray() {
+  tray.innerHTML = '';
+  for (const id of Object.keys(SHAPES)) {
+    const piece = document.createElement('div');
+    piece.className = 'piece';
+    piece.draggable = true;
+    piece.innerHTML = svgFor(id, colorA.value, colorB.value);
+    piece.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('text/plain', JSON.stringify({ id, a: colorA.value, b: colorB.value }));
+    });
+    tray.appendChild(piece);
+  }
+}
+colorA.addEventListener('change', renderTray);
+colorB.addEventListener('change', renderTray);
+renderTray();
+
+const board = document.getElementById('board');
+function buildBoard(cols, rows) {
+  board.style.setProperty('--cols', cols);
+  board.innerHTML = '';
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.dataset.rotation = '0';
+      cell.dataset.row = r;
+      cell.dataset.col = c;
+
+      cell.addEventListener('dragover', e => { e.preventDefault(); cell.classList.add('over'); });
+      cell.addEventListener('dragleave', () => cell.classList.remove('over'));
+      cell.addEventListener('drop', e => {
+        e.preventDefault();
+        cell.classList.remove('over');
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        cell.dataset.rotation = '0';
+        cell.innerHTML = svgFor(data.id, data.a, data.b);
+      });
+      cell.addEventListener('click', () => {
+        const svg = cell.querySelector('svg');
+        if (!svg) return;
+        const next = (parseInt(cell.dataset.rotation, 10) + 90) % 360;
+        cell.dataset.rotation = String(next);
+        svg.style.transform = 'rotate(' + next + 'deg)';
+      });
+      cell.addEventListener('dblclick', () => {
+        cell.innerHTML = '';
+        cell.dataset.rotation = '0';
+      });
+
+      board.appendChild(cell);
+    }
+  }
+}
+
+const colsInput = document.getElementById('cols');
+const rowsInput = document.getElementById('rows');
+function currentSize() {
+  let cols = Math.min(9, Math.max(4, parseInt(colsInput.value, 10) || 8));
+  let rows = Math.min(99, Math.max(3, parseInt(rowsInput.value, 10) || 8));
+  colsInput.value = cols; rowsInput.value = rows;
+  return [cols, rows];
+}
+
+document.getElementById('apply').addEventListener('click', () => {
+  const size = currentSize();
+  buildBoard(size[0], size[1]);
+});
+document.getElementById('clearAll').addEventListener('click', () => {
+  const size = currentSize();
+  buildBoard(size[0], size[1]);
+});
+
+const presetsEl = document.getElementById('presets');
+for (const id of Object.keys(PRESET_LABELS)) {
+  const btn = document.createElement('button');
+  btn.className = 'preset';
+  btn.textContent = PRESET_LABELS[id];
+  btn.addEventListener('click', () => {
+    const size = currentSize();
+    buildBoard(size[0], size[1]);
+    const cells = board.querySelectorAll('.cell');
+    cells.forEach(cell => {
+      const r = parseInt(cell.dataset.row, 10);
+      const c = parseInt(cell.dataset.col, 10);
+      const result = presetCell(id, r, c);
+      cell.innerHTML = svgFor(result[0], result[1], result[2]);
+      cell.dataset.rotation = '0';
+    });
+  });
+  presetsEl.appendChild(btn);
+}
+
+buildBoard(8, 8);
+</script>
+
+</body>
+</html>

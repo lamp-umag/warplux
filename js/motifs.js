@@ -1,87 +1,60 @@
 /* =========================================================
    motifs.js — dibuja un nudo (celda del telar).
-   Vocabulario mínimo: 5 puntos (formas), giro + espejo,
-   y una paleta cerrada de colores (no color picker libre).
-   La redondez (exterior/interior) es una propiedad del
-   TELAR completo, no de cada nudo — se pasa como "apariencia".
-   Sin dependencias, devuelve SVG como string.
+   Vocabulario de teselas tomado de tiles/ (board_2.html,
+   preview.html, palette.json): 7 formas geométricas planas
+   de dos colores (tinte/matiz) que embonan sin bordes cuando
+   están una junto a otra — así se arman los arcos y rombos
+   grandes que cruzan varios nudos. Sin dependencias, SVG string.
    ========================================================= */
 
 export var PUNTOS = [
   { id: "solido", nombre: "Sólido" },
-  { id: "diagonal", nombre: "Diagonal" },
-  { id: "esquina", nombre: "Esquina" },
-  { id: "punto", nombre: "Punto" },
+  { id: "arc-tl", nombre: "Arco ↖" },
+  { id: "arc-tr", nombre: "Arco ↗" },
+  { id: "arc-bl", nombre: "Arco ↙" },
+  { id: "arc-br", nombre: "Arco ↘" },
+  { id: "diag-tlbr", nombre: "Diagonal ↘" },
+  { id: "diag-trbl", nombre: "Diagonal ↙" },
   { id: "vacio", nombre: "Vacío" }
 ];
 
 export var PALETA = [
-  { id: "crema", hex: "#f1f0ec" },
-  { id: "dorado", hex: "#e29f3e" },
-  { id: "oliva", hex: "#85751a" },
-  { id: "terracota", hex: "#bb6f3a" },
-  { id: "tinta", hex: "#3a402f" },
-  { id: "liquen", hex: "#7a8b6a" }
+  { id: "forest", hex: "#3a402f" },
+  { id: "olive", hex: "#85751a" },
+  { id: "amber", hex: "#e29f3e" },
+  { id: "rust", hex: "#bb6f3a" },
+  { id: "cream", hex: "#f2f1ed" }
 ];
 
-export var APARIENCIA_DEFECTO = { redondezExterior: 16, redondezInterior: 14, espacioNudos: 3 };
+export var APARIENCIA_DEFECTO = { espacioNudos: 0 };
 
-/** rectángulo con control de redondez por esquina. c = [tl,tr,br,bl] booleans */
-function rpath(x, y, w, h, c, r) {
-  var tl = r * (c[0] ? 1 : 0), tr = r * (c[1] ? 1 : 0),
-      br = r * (c[2] ? 1 : 0), bl = r * (c[3] ? 1 : 0);
-  return "M" + (x + tl) + " " + y +
-    " H" + (x + w - tr) + (tr ? " A" + tr + " " + tr + " 0 0 1 " + (x + w) + " " + (y + tr) : "") +
-    " V" + (y + h - br) + (br ? " A" + br + " " + br + " 0 0 1 " + (x + w - br) + " " + (y + h) : "") +
-    " H" + (x + bl) + (bl ? " A" + bl + " " + bl + " 0 0 1 " + x + " " + (y + h - bl) : "") +
-    " V" + (y + tl) + (tl ? " A" + tl + " " + tl + " 0 0 1 " + (x + tl) + " " + y : "") + " Z";
-}
 function path(d, fill) { return '<path d="' + d + '" fill="' + fill + '"/>'; }
+function rect(fill) { return '<rect width="100" height="100" fill="' + fill + '"/>'; }
 
-var clipSeq = 0;
 var DRAW = {
-  solido: function (tinte, matiz, acento, rExt, rInt) {
-    return path(rpath(0, 0, 100, 100, [1, 1, 1, 1], rExt), tinte);
-  },
-  diagonal: function (tinte, matiz, acento, rExt, rInt) {
-    var cid = "cd" + (clipSeq++);
-    return path(rpath(0, 0, 100, 100, [1, 1, 1, 1], rExt), tinte) +
-      '<clipPath id="' + cid + '"><path d="' + rpath(0, 0, 100, 100, [1, 1, 1, 1], rExt) + '"/></clipPath>' +
-      '<g clip-path="url(#' + cid + ')"><polygon points="0,100 100,100 100,0" fill="' + matiz + '"/></g>';
-  },
-  esquina: function (tinte, matiz, acento, rExt, rInt) {
-    var k = Math.max(rInt, 14);
-    return path(rpath(0, 0, 100, 100, [1, 1, 1, 1], rExt), tinte) +
-      path(rpath(46, 46, 54, 54, [1, 0, 0, 0], k), matiz);
-  },
-  punto: function (tinte, matiz, acento, rExt, rInt) {
-    var k = Math.max(rInt, 12);
-    return path(rpath(0, 0, 100, 100, [1, 1, 1, 1], rExt), tinte) +
-      path(rpath(28, 28, 44, 44, [1, 1, 1, 1], k), matiz) +
-      (acento ? path(rpath(41, 41, 18, 18, [1, 1, 1, 1], Math.max(k - 6, 0)), acento) : "");
-  },
-  vacio: function (tinte, matiz, acento, rExt, rInt) {
-    return path(rpath(0, 0, 100, 100, [1, 1, 1, 1], rExt), tinte);
-  }
+  solido: function (a) { return rect(a); },
+  "arc-tl": function (a, b) { return rect(b) + path("M0,0 L100,0 A100,100 0 0 1 0,100 Z", a); },
+  "arc-tr": function (a, b) { return rect(b) + path("M100,0 L100,100 A100,100 0 0 1 0,0 Z", a); },
+  "arc-bl": function (a, b) { return rect(b) + path("M0,100 L0,0 A100,100 0 0 1 100,100 Z", a); },
+  "arc-br": function (a, b) { return rect(b) + path("M100,100 L0,100 A100,100 0 0 1 100,0 Z", a); },
+  "diag-tlbr": function (a, b) { return path("M0,0 L100,0 L100,100 Z", b) + path("M0,0 L100,100 L0,100 Z", a); },
+  "diag-trbl": function (a, b) { return path("M0,0 L100,0 L0,100 Z", b) + path("M100,0 L100,100 L0,100 Z", a); },
+  vacio: function (a) { return rect(a); }
 };
 
 /**
- * Dibuja un nudo. nudo = {punto, tinte, matiz, acento, giro, espejo}
- * apariencia = {redondezExterior, redondezInterior} — viene del telar completo.
+ * Dibuja un nudo. nudo = {punto, tinte, matiz, giro, espejo}
+ * tinte = color A (protagonista), matiz = color B (campo/fondo).
  */
 export function dibujarNudo(nudo, apariencia) {
-  apariencia = apariencia || APARIENCIA_DEFECTO;
   var punto = DRAW[nudo.punto] ? nudo.punto : "solido";
-  var tinte = nudo.tinte || "#e7ebe2";
+  var tinte = nudo.tinte || "#3a402f";
   var matiz = nudo.matiz || tinte;
-  var acento = nudo.acento || "";
-  var rExt = typeof apariencia.redondezExterior === "number" ? apariencia.redondezExterior : APARIENCIA_DEFECTO.redondezExterior;
-  var rInt = typeof apariencia.redondezInterior === "number" ? apariencia.redondezInterior : APARIENCIA_DEFECTO.redondezInterior;
   var giro = nudo.giro || 0;
-  var inner = DRAW[punto](tinte, matiz, acento, rExt, rInt);
+  var inner = DRAW[punto](tinte, matiz);
   var t = "";
   if (nudo.espejo) t += "translate(100,0) scale(-1,1) ";
   if (giro) t += "rotate(" + giro + " 50 50) ";
   return '<svg viewBox="0 0 100 100" width="100%" height="100%" aria-hidden="true" style="display:block">' +
-    '<g transform="' + t + '">' + inner + "</g></svg>";
+    (t ? '<g transform="' + t + '">' + inner + "</g>" : inner) + "</svg>";
 }

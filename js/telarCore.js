@@ -74,10 +74,10 @@ export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
         return opts.soloTejido ? n.estado === "tejido" : true;
       });
       if (!lista.length) {
-        var vacioNudo = (opts.vacioFn && opts.vacioFn(pasada, hilo.id)) || { punto: "vacio", tinte: "#e7ebe2" };
+        var vacioNudo = (opts.vacioFn && opts.vacioFn(pasada, hilo.id)) || { punto: "vacio", tinte: "#f2f1ed" };
         var interactivo = opts.vacioInteractivo;
         html += '<button class="nudo vacio" data-pasada="' + pasada.id + '" data-hilo="' + hilo.id +
-          '"' + (interactivo ? "" : ' tabindex="-1" aria-hidden="true"') + '>' +
+          '" style="background:' + vacioNudo.tinte + '"' + (interactivo ? "" : ' tabindex="-1" aria-hidden="true"') + '>' +
           '<span class="fondo"></span>' + dibujarNudo(vacioNudo, apariencia) + "</button>";
         return;
       }
@@ -85,13 +85,16 @@ export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
       var reciente = opts.esReciente && opts.esReciente(principal) ? " recien-tejido" : "";
       var atenuado = opts.esVisible && !lista.some(opts.esVisible) ? " atenuado" : "";
       html += '<button class="nudo' + reciente + atenuado + '" data-pasada="' + pasada.id +
-        '" data-hilo="' + hilo.id + '" aria-label="' + (lista.length > 1 ? lista.length + " aportes" : "un aporte") + '">' +
+        '" data-hilo="' + hilo.id + '" style="background:' + (principal.tinte || "#3a402f") + '" aria-label="' + (lista.length > 1 ? lista.length + " aportes" : "un aporte") + '">' +
         dibujarNudo(principal, apariencia) +
         (lista.length > 1 ? '<span class="racimo-badge">' + lista.length + "</span>" : "") +
         "</button>";
     });
     html += "</div>";
   });
+  el.style.display = "flex";
+  el.style.flexDirection = "column";
+  el.style.gap = (typeof apariencia.espacioNudos === "number" ? apariencia.espacioNudos : APARIENCIA_DEFECTO.espacioNudos) + "px";
   el.innerHTML = html;
 
   if (opts.onNudoClick || opts.onNudoHover) {
@@ -99,7 +102,7 @@ export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
       var pasadaId = btn.dataset.pasada, hiloId = btn.dataset.hilo;
       var pasada = pasadas.filter(function (p) { return p.id === pasadaId; })[0];
       var todos = (agruparPorHilo(nudosPorPasada[pasadaId] || [])[hiloId] || []);
-      if (opts.onNudoClick) btn.addEventListener("click", function () { opts.onNudoClick(todos[0], pasada, hiloId, todos, btn); });
+      if (opts.onNudoClick) btn.addEventListener("click", function (e) { opts.onNudoClick(todos[0], pasada, hiloId, todos, btn, e); });
       if (opts.onNudoHover) btn.addEventListener("mouseenter", function () { opts.onNudoHover(todos[0], pasada, hiloId, todos, btn); });
     });
   }

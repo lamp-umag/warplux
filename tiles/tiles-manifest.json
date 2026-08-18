@@ -1,0 +1,57 @@
+[
+  {
+    "id": "arc-tl",
+    "file": "arc-tl.svg",
+    "family": "arc",
+    "corner": "top-left",
+    "vars": { "tile-a": "disk near the corner", "tile-b": "field around it" },
+    "defaults": { "tile-a": "#3a402f", "tile-b": "#85751a" }
+  },
+  {
+    "id": "arc-tr",
+    "file": "arc-tr.svg",
+    "family": "arc",
+    "corner": "top-right",
+    "vars": { "tile-a": "disk near the corner", "tile-b": "field around it" },
+    "defaults": { "tile-a": "#bb6f3a", "tile-b": "#3a402f" }
+  },
+  {
+    "id": "arc-bl",
+    "file": "arc-bl.svg",
+    "family": "arc",
+    "corner": "bottom-left",
+    "vars": { "tile-a": "disk near the corner", "tile-b": "field around it" },
+    "defaults": { "tile-a": "#85751a", "tile-b": "#3a402f" }
+  },
+  {
+    "id": "arc-br",
+    "file": "arc-br.svg",
+    "family": "arc",
+    "corner": "bottom-right",
+    "vars": { "tile-a": "disk near the corner", "tile-b": "field around it" },
+    "defaults": { "tile-a": "#e29f3e", "tile-b": "#3a402f" }
+  },
+  {
+    "id": "diag-tlbr",
+    "file": "diag-tlbr.svg",
+    "family": "diagonal",
+    "axis": "top-left to bottom-right",
+    "vars": { "tile-a": "lower-left triangle", "tile-b": "upper-right triangle" },
+    "defaults": { "tile-a": "#85751a", "tile-b": "#3a402f" }
+  },
+  {
+    "id": "diag-trbl",
+    "file": "diag-trbl.svg",
+    "family": "diagonal",
+    "axis": "top-right to bottom-left",
+    "vars": { "tile-a": "lower-right triangle", "tile-b": "upper-left triangle" },
+    "defaults": { "tile-a": "#e29f3e", "tile-b": "#85751a" }
+  },
+  {
+    "id": "solid",
+    "file": "solid.svg",
+    "family": "solid",
+    "vars": { "tile-a": "full square fill" },
+    "defaults": { "tile-a": "#3a402f" }
+  }
+]
