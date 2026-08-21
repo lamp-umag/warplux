@@ -69,6 +69,7 @@ function renderTelares(el, perfil, unsubs) {
       '<button class="btn" id="t-sembrar-sample" style="margin-left:8px">Crear telar de ejemplo (sample)</button>' +
       '<p class="ghost" id="t-estado" style="margin-top:8px"></p>' +
     '</div>' +
+    '<p class="ghost" style="margin-bottom:14px">💾 Descarga un respaldo (JSON) de cada telar de vez en cuando para no perder el contenido si la base de datos falla — el botón está en la pestaña "Contenido", arriba del selector de telar.</p>' +
     '<div id="lista-telares"></div>';
 
   el.querySelector("#t-crear").addEventListener("click", async function () {
@@ -132,7 +133,10 @@ function renderTelares(el, perfil, unsubs) {
       var p = d.data();
       html += '<div class="card" data-slug="' + d.id + '" style="margin-bottom:10px">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">' +
-          '<div><strong>' + p.nombre + '</strong> <span class="ghost">· /' + d.id + " · " + p.columnas + ' columnas</span></div>' +
+          '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:220px">' +
+            '<input class="fl-nombre t-nombre-edit" style="font-weight:700;flex:1;min-width:120px" value="' + (p.nombre || "") + '">' +
+            '<span class="ghost" style="white-space:nowrap">· /' + d.id + " · " + p.columnas + ' columnas</span>' +
+          '</div>' +
           '<div style="display:flex;gap:8px;align-items:center">' +
             '<label style="display:flex;align-items:center;gap:6px;font-size:.78rem"><input type="checkbox" class="t-activo"' + (p.activo ? " checked" : "") + '> Activo</label>' +
             '<a class="btn" href="index.html?p=' + d.id + '" target="_blank">Ver</a>' +
@@ -154,6 +158,15 @@ function renderTelares(el, perfil, unsubs) {
       var slug = card.dataset.slug;
       var ref = doc(db, "proyectos", slug);
       card.querySelector(".t-activo").addEventListener("change", function (e) { setDoc(ref, { activo: e.target.checked }, { merge: true }); });
+      var nombreInput = card.querySelector(".t-nombre-edit");
+      function guardarNombreTelar() {
+        var nombre = nombreInput.value.trim();
+        if (!nombre) { nombreInput.value = nombreInput.defaultValue || ""; return; }
+        setDoc(ref, { nombre: nombre }, { merge: true });
+        registrar(slug, { tipo: "proyecto_renombrado", resumen: "Telar renombrado: " + nombre, autor: perfil.email });
+      }
+      nombreInput.addEventListener("blur", guardarNombreTelar);
+      nombreInput.addEventListener("keydown", function (e) { if (e.key === "Enter") nombreInput.blur(); });
       card.querySelector(".t-esp").addEventListener("input", function (e) {
         card.querySelector(".t-esp-v").textContent = e.target.value + "px";
         setDoc(ref, { espacioNudos: +e.target.value }, { merge: true });
