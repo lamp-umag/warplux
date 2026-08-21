@@ -118,7 +118,7 @@ export function renderContenido(el, perfil, unsubs) {
     var siguienteIndex = pasadasSnap.docs.reduce(function (max, d) { return Math.max(max, d.data().index || 0); }, 0) + 1;
     var id = slugificar(nombre) + "-" + siguienteIndex;
     await setDoc(doc(db, "proyectos", estado.proyecto.id, "pasadas", id), {
-      index: siguienteIndex, tipo: tipo, etiquetaCorta: String(siguienteIndex), nombre: nombre, activo: false
+      index: siguienteIndex, tipo: tipo, nombre: nombre, activo: false
     });
     registrar(estado.proyecto.id, { tipo: "fila_creada", resumen: "Fila creada: " + nombre + " (" + tipo + ")", autor: perfil.email });
     el.querySelector("#np-nombre").value = "";
@@ -175,7 +175,7 @@ function cargarTelar(el, estado, perfil) {
   var unsub = onSnapshot(qPasadas, function (snap) {
     estado.pasadas = [];
     snap.forEach(function (d) { estado.pasadas.push(Object.assign({ id: d.id }, d.data())); });
-    renderCabecera(el.querySelector("#ct-cabecera"), proyecto.urdimbre, { corner: "pasada", espacioNudos: proyecto.espacioNudos });
+    renderCabecera(el.querySelector("#ct-cabecera"), proyecto.urdimbre, { espacioNudos: proyecto.espacioNudos });
     renderFilasLista(el, estado, perfil);
     estado.pasadas.forEach(function (p) { suscribirNudos(el, estado, p, perfil, unsubs); });
     pintar(el, estado, perfil);
@@ -192,6 +192,7 @@ function renderFilasLista(el, estado, perfil) {
       '<input type="checkbox" class="fl-activa" title="Activa (visible al público)"' + (p.activo !== false ? " checked" : "") + '>' +
       '<span class="tag">' + (p.tipo || "") + '</span>' +
       '<input class="fl-nombre" value="' + (p.nombre || "") + '">' +
+      '<input class="fl-etiqueta" maxlength="3" placeholder="—" title="Nombre corto (hasta 3 letras) que se ve en la fila; al pasar el mouse muestra el nombre completo" value="' + (p.etiquetaCorta || "") + '">' +
       '<label class="fl-check" title="Muestra el color/forma real de las celdas de esta fila aunque todavía no tengan contenido">' +
         '<input type="checkbox" class="fl-forzar"' + (p.forzarColor ? " checked" : "") + '> Forzar color</label>' +
       '<label class="fl-check" title="Las celdas sin contenido se ven con color pero atenuadas/desaturadas, no a todo color">' +
@@ -221,6 +222,16 @@ function renderFilasLista(el, estado, perfil) {
     }
     nombreInput.addEventListener("blur", guardarNombre);
     nombreInput.addEventListener("keydown", function (e) { if (e.key === "Enter") nombreInput.blur(); });
+
+    var etiquetaInput = fila.querySelector(".fl-etiqueta");
+    function guardarEtiqueta() {
+      var etiqueta = etiquetaInput.value.trim().slice(0, 3);
+      etiquetaInput.value = etiqueta;
+      setDoc(ref, { etiquetaCorta: etiqueta }, { merge: true });
+      registrar(estado.proyecto.id, { tipo: "fila_etiqueta", resumen: "Nombre corto de fila actualizado: " + (etiqueta || "(vacío)"), autor: perfil.email });
+    }
+    etiquetaInput.addEventListener("blur", guardarEtiqueta);
+    etiquetaInput.addEventListener("keydown", function (e) { if (e.key === "Enter") etiquetaInput.blur(); });
 
     var forzarInput = fila.querySelector(".fl-forzar");
     var atenuadoInput = fila.querySelector(".fl-atenuado");

@@ -84,7 +84,7 @@ export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
     var atenuadoPorDefecto = pasada.atenuado !== false;
     html += '<div class="pasada" data-pasada="' + pasada.id + '" style="grid-template-columns:' +
       GRID_GUIA + " repeat(" + hilosContenido.length + ',minmax(0,1fr));gap:' + apariencia.espacioNudos + 'px">';
-    html += '<div class="pasada-etiqueta">' + (pasada.etiquetaCorta || "") + "</div>";
+    html += '<div class="pasada-etiqueta" title="' + (pasada.nombre || "") + '">' + (pasada.etiquetaCorta || "") + "</div>";
     hilosContenido.forEach(function (hilo) {
       var lista = filtrarNudos(grupos[hilo.id], forzar ? Object.assign({}, opts, { soloConContenido: false }) : opts);
       if (!lista.length) {

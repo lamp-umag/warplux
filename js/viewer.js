@@ -62,6 +62,7 @@ async function cargarProyecto() {
   $("titulo-proyecto").textContent = estado.proyecto.nombre || slug;
   $("lede-proyecto").textContent = estado.proyecto.nombreLargo || "";
   mostrarSolo("vista-telar");
+  panelVacio(); // recién sabemos acá si el urdidor apagó/editó el texto de ayuda del panel
 
   var qPasadas = query(collection(db, "proyectos", slug, "pasadas"), orderBy("index"));
   onSnapshot(qPasadas, function (snap) {
@@ -102,7 +103,6 @@ function apariencia() {
 
 function renderCabeceraTop() {
   renderCabecera($("telar-cabecera"), estado.hilos, {
-    corner: "pasada",
     espacioNudos: apariencia().espacioNudos,
     hiloActivo: estado.hiloActivo,
     onHiloClick: function (hiloId) {
@@ -152,9 +152,13 @@ function renderTodo() {
 }
 
 function panelVacio() {
+  var p = estado.proyecto;
+  if (p && p.ayudaActiva === false) { $("panel-body").innerHTML = ""; return; }
+  var titulo = (p && p.ayudaTitulo) || "Cómo leer el telar";
+  var texto = (p && p.ayudaTexto) || "Toca cualquier nudo para leer lo que dice, quién lo trajo y en qué pasada está.";
   $("panel-body").innerHTML =
-    '<div class="eyebrow">Cómo leer el telar</div>' +
-    '<p class="estado-vacio">Toca cualquier nudo para leer lo que dice, quién lo trajo y en qué pasada está.</p>';
+    '<div class="eyebrow">' + titulo + '</div>' +
+    '<p class="estado-vacio">' + texto + '</p>';
 }
 
 function mostrarPanel(nudo, pasada, hiloId, todos) {

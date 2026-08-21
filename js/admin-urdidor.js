@@ -10,6 +10,7 @@ import { FORMULARIO_MESA_DEFECTO } from "./formularioMesaDefecto.js";
 import { suscribirEstilos, sembrarEstilosBase } from "./estilos.js";
 import { renderContenido, renderMesasNuevas, renderCola } from "./admin-tejedor.js";
 import { renderMesas } from "./admin-hilador.js";
+import { debounce } from "./util.js";
 
 /* =========================================================
    admin-urdidor.js — urdidor puede hacer todo: crea/borra
@@ -139,6 +140,12 @@ function renderTelares(el, perfil, unsubs) {
           '</div>' +
         '</div>' +
         '<div class="field" style="max-width:260px;margin-top:12px"><label>Espacio entre nudos <span class="t-esp-v">' + p.espacioNudos + 'px</span></label><input type="range" min="0" max="8" class="t-esp" value="' + p.espacioNudos + '"></div>' +
+        '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">' +
+          '<label style="display:flex;align-items:center;gap:6px;font-size:.78rem;margin-bottom:8px">' +
+            '<input type="checkbox" class="t-ayuda-activa"' + (p.ayudaActiva === false ? "" : " checked") + '> Mostrar el texto de ayuda ("Cómo leer el telar") en el panel de lectura</label>' +
+          '<div class="field" style="max-width:360px"><label>Título</label><input class="t-ayuda-titulo" value="' + (p.ayudaTitulo || "Cómo leer el telar") + '"></div>' +
+          '<div class="field" style="max-width:360px"><label>Texto</label><textarea class="t-ayuda-texto" rows="2">' + (p.ayudaTexto || "Toca cualquier nudo para leer lo que dice, quién lo trajo y en qué pasada está.") + '</textarea></div>' +
+        '</div>' +
       '</div>';
     });
     el.querySelector("#lista-telares").innerHTML = html || '<p class="estado-vacio">Todavía no hay telares.</p>';
@@ -154,6 +161,21 @@ function renderTelares(el, perfil, unsubs) {
       card.querySelector(".t-borrar").addEventListener("click", async function () {
         if (!confirm('¿Borrar el telar "' + slug + '" y todo su contenido? Esto no se puede deshacer.')) return;
         await borrarProyecto(slug);
+      });
+
+      card.querySelector(".t-ayuda-activa").addEventListener("change", function (e) {
+        setDoc(ref, { ayudaActiva: e.target.checked }, { merge: true });
+      });
+      var guardarAyudaTexto = debounce(function () {
+        setDoc(ref, {
+          ayudaTitulo: card.querySelector(".t-ayuda-titulo").value.trim(),
+          ayudaTexto: card.querySelector(".t-ayuda-texto").value.trim()
+        }, { merge: true });
+      }, 600);
+      ["t-ayuda-titulo", "t-ayuda-texto"].forEach(function (clase) {
+        var campo = card.querySelector("." + clase);
+        campo.addEventListener("input", guardarAyudaTexto);
+        campo.addEventListener("blur", function () { guardarAyudaTexto.flush(); });
       });
     });
   });
