@@ -2,7 +2,7 @@ import { db } from "./firebaseClient.js";
 import {
   collection, doc, getDoc, getDocs, query, where, orderBy, onSnapshot
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-import { renderCabecera, renderCuerpo, marcarActivo, agruparPorHilo } from "./telarCore.js";
+import { renderCuerpo, marcarActivo, agruparPorHilo } from "./telarCore.js";
 import { APARIENCIA_DEFECTO } from "./motifs.js";
 
 var params = new URLSearchParams(location.search);
@@ -13,7 +13,6 @@ var estado = {
   hilos: [],
   pasadas: [],
   nudosPorPasada: {},
-  hiloActivo: null,
   vista: "telar",
   suscritas: {}
 };
@@ -72,7 +71,6 @@ async function cargarProyecto() {
       if (p.activo !== false) estado.pasadas.push(p); // fila desactivada por el urdidor: no se muestra
     });
     estado.pasadas.forEach(suscribirNudos);
-    renderCabeceraTop();
     renderTodo();
   });
 }
@@ -101,22 +99,6 @@ function apariencia() {
   } : APARIENCIA_DEFECTO;
 }
 
-function renderCabeceraTop() {
-  renderCabecera($("telar-cabecera"), estado.hilos, {
-    espacioNudos: apariencia().espacioNudos,
-    hiloActivo: estado.hiloActivo,
-    onHiloClick: function (hiloId) {
-      estado.hiloActivo = estado.hiloActivo === hiloId ? null : hiloId;
-      renderCabeceraTop();
-      renderTodo();
-    }
-  });
-}
-
-function esVisible(nudo) {
-  return !estado.hiloActivo || nudo.hiloId === estado.hiloActivo;
-}
-
 // un nudo sin título ni texto se ve vacío (el crema/gris de siempre, vía el
 // fallback de renderCuerpo) en el telar público, sin importar qué forma o
 // color le haya dado el urdidor de antemano — recién muestra su color real
@@ -132,7 +114,6 @@ function renderTodo() {
     apariencia: apariencia(),
     soloTejido: true,
     soloConContenido: true,
-    esVisible: esVisible,
     resonarGemelos: true, // en mesas 2x1, las dos celdas de una misma pregunta reaccionan juntas
     onNudoClick: function (nudo, pasada, hiloId, todos, btn, e, gemelos) {
       marcarActivo($("telar-cuerpo"), [btn].concat(gemelos || []));
@@ -240,7 +221,8 @@ function renderHilosView(total) {
       '<h3 style="font-size:.78rem;letter-spacing:.02em;margin-bottom:10px">' + g.titulo + '</h3>';
     g.entradas.forEach(function (e) {
       html += '<div class="card" style="border-left:4px solid ' + (e.nudo.tinte || "#ccc") + '">' +
-        '<p class="cita" style="margin:0 0 8px">“' + (e.nudo.texto || e.nudo.titulo) + '”</p>' +
+        (e.nudo.titulo ? '<p style="font-weight:700;margin:0 0 4px">' + e.nudo.titulo + '</p>' : "") +
+        (e.nudo.texto ? '<p class="cita" style="margin:0 0 8px">“' + e.nudo.texto + '”</p>' : "") +
         '<div class="meta"><span class="tag">' + (e.pasada.nombre || e.pasada.etiquetaCorta) + '</span></div>' +
         '</div>';
     });

@@ -123,7 +123,6 @@ img,svg{max-width:100%}
 .nudo.activo{transform:scale(1.08);z-index:3;box-shadow:0 0 0 2px var(--fg-strong)}
 .nudo.vacio{cursor:default}
 .nudo.vacio:hover{transform:none}
-.nudo.atenuado{opacity:.28;filter:grayscale(.4)}
 .nudo.forzado-atenuado{opacity:.5;filter:grayscale(.55)}
 .nudo.resonando{transform:scale(1.08);z-index:3}
 .racimo-badge{position:absolute;top:2px;right:2px;background:var(--fg-strong);color:var(--bg);

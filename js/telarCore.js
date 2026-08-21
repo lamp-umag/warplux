@@ -66,8 +66,8 @@ function filtrarNudos(lista, opts) {
 /**
  * cuerpo del telar. pasadas: [{id, etiquetaCorta, ...}], nudosPorPasada: {pasadaId: [nudo,...]}
  * opts: { hilos, apariencia, onNudoClick(nudo, pasada, hiloId, todos), onNudoHover,
- *         esVisible(nudo), esReciente(nudo), vacioFn(pasada,hiloId), vacioInteractivo,
- *         soloTejido, soloConContenido }
+ *         esReciente(nudo), vacioFn(pasada,hiloId), vacioInteractivo,
+ *         soloTejido, soloConContenido, resonarGemelos }
  */
 export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
   opts = opts || {};
@@ -98,9 +98,8 @@ export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
       var principal = lista[0];
       var sinContenido = !((principal.titulo && principal.titulo.trim()) || (principal.texto && principal.texto.trim()));
       var reciente = opts.esReciente && opts.esReciente(principal) ? " recien-tejido" : "";
-      var atenuado = opts.esVisible && !lista.some(opts.esVisible) ? " atenuado" : "";
       var forzadoAtenuado = forzar && sinContenido && atenuadoPorDefecto ? " forzado-atenuado" : "";
-      html += '<button class="nudo' + reciente + atenuado + forzadoAtenuado + '" data-pasada="' + pasada.id +
+      html += '<button class="nudo' + reciente + forzadoAtenuado + '" data-pasada="' + pasada.id +
         '" data-hilo="' + hilo.id + '" style="background:' + (principal.tinte || "#3a402f") + '" aria-label="' + (lista.length > 1 ? lista.length + " aportes" : "un aporte") + '">' +
         dibujarNudo(principal, apariencia) +
         (lista.length > 1 ? '<span class="racimo-badge">' + lista.length + "</span>" : "") +
