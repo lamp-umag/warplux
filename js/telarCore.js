@@ -76,11 +76,17 @@ export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
   var html = "";
   pasadas.forEach(function (pasada) {
     var grupos = agruparPorHilo(nudosPorPasada[pasada.id] || []);
+    // "forzar color": el urdidor puede pedir que esta fila muestre la apariencia real de sus
+    // nudos (forma/color ya asignados) aunque todavía no tengan título ni texto — bypassea
+    // soloConContenido para esta fila. "atenuado" (true por defecto al activar forzar) hace que
+    // esas celdas sin contenido se vean con color pero desaturadas/pálidas, no a todo color.
+    var forzar = !!pasada.forzarColor;
+    var atenuadoPorDefecto = pasada.atenuado !== false;
     html += '<div class="pasada" data-pasada="' + pasada.id + '" style="grid-template-columns:' +
       GRID_GUIA + " repeat(" + hilosContenido.length + ',minmax(0,1fr));gap:' + apariencia.espacioNudos + 'px">';
     html += '<div class="pasada-etiqueta">' + (pasada.etiquetaCorta || "") + "</div>";
     hilosContenido.forEach(function (hilo) {
-      var lista = filtrarNudos(grupos[hilo.id], opts);
+      var lista = filtrarNudos(grupos[hilo.id], forzar ? Object.assign({}, opts, { soloConContenido: false }) : opts);
       if (!lista.length) {
         var vacioNudo = (opts.vacioFn && opts.vacioFn(pasada, hilo.id)) || { punto: "vacio", tinte: "#f2f1ed" };
         var interactivo = opts.vacioInteractivo;
@@ -90,9 +96,11 @@ export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
         return;
       }
       var principal = lista[0];
+      var sinContenido = !((principal.titulo && principal.titulo.trim()) || (principal.texto && principal.texto.trim()));
       var reciente = opts.esReciente && opts.esReciente(principal) ? " recien-tejido" : "";
       var atenuado = opts.esVisible && !lista.some(opts.esVisible) ? " atenuado" : "";
-      html += '<button class="nudo' + reciente + atenuado + '" data-pasada="' + pasada.id +
+      var forzadoAtenuado = forzar && sinContenido && atenuadoPorDefecto ? " forzado-atenuado" : "";
+      html += '<button class="nudo' + reciente + atenuado + forzadoAtenuado + '" data-pasada="' + pasada.id +
         '" data-hilo="' + hilo.id + '" style="background:' + (principal.tinte || "#3a402f") + '" aria-label="' + (lista.length > 1 ? lista.length + " aportes" : "un aporte") + '">' +
         dibujarNudo(principal, apariencia) +
         (lista.length > 1 ? '<span class="racimo-badge">' + lista.length + "</span>" : "") +
@@ -109,7 +117,8 @@ export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
     Array.prototype.forEach.call(el.querySelectorAll("[data-pasada][data-hilo]"), function (btn) {
       var pasadaId = btn.dataset.pasada, hiloId = btn.dataset.hilo;
       var pasada = pasadas.filter(function (p) { return p.id === pasadaId; })[0];
-      var todos = filtrarNudos((agruparPorHilo(nudosPorPasada[pasadaId] || [])[hiloId] || []), opts);
+      var opciones = (pasada && pasada.forzarColor) ? Object.assign({}, opts, { soloConContenido: false }) : opts;
+      var todos = filtrarNudos((agruparPorHilo(nudosPorPasada[pasadaId] || [])[hiloId] || []), opciones);
       if (opts.onNudoClick) btn.addEventListener("click", function (e) { opts.onNudoClick(todos[0], pasada, hiloId, todos, btn, e); });
       if (opts.onNudoHover) btn.addEventListener("mouseenter", function () { opts.onNudoHover(todos[0], pasada, hiloId, todos, btn); });
     });

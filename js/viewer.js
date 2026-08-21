@@ -165,6 +165,7 @@ function mostrarPanel(nudo, pasada, hiloId, todos) {
   var enlaceSeguro = esUrlSegura(nudo.enlaceUrl);
   var html = '<div class="eyebrow">' + (pasada.nombre || pasada.etiquetaCorta) +
     (hilo.nombre ? " · " + hilo.nombre : "") + "</div>" +
+    (nudo.pregunta ? '<p class="ghost" style="font-style:italic;margin-bottom:8px">' + nudo.pregunta + "</p>" : "") +
     (nudo.titulo ? "<h2 style=\"font-size:1.05rem;margin-bottom:8px\">" + nudo.titulo + "</h2>" : "") +
     (imagenSegura ? '<img src="' + imagenSegura + '" alt="" style="width:100%;border-radius:8px;margin-bottom:10px">' : "") +
     (nudo.texto ? '<p class="cita">“' + nudo.texto + '”</p>' : "") +
@@ -218,6 +219,7 @@ function renderHilosView(total) {
       grupos[hiloId].filter(tieneContenido).forEach(function (n) {
         var hilo = estado.hilos.filter(function (h) { return h.id === hiloId; })[0] || {};
         html += '<div class="card" style="border-left:4px solid ' + (n.tinte || "#ccc") + '">' +
+          (n.pregunta ? '<p class="ghost" style="font-style:italic;font-size:.8rem;margin:0 0 6px">' + n.pregunta + '</p>' : "") +
           '<p class="cita" style="margin:0 0 8px">“' + (n.texto || n.titulo) + '”</p>' +
           '<div class="meta">' +
           '<span class="tag">' + (pasada.nombre || pasada.etiquetaCorta) + "</span>" +

@@ -124,6 +124,7 @@ img,svg{max-width:100%}
 .nudo.vacio{cursor:default}
 .nudo.vacio:hover{transform:none}
 .nudo.atenuado{opacity:.28;filter:grayscale(.4)}
+.nudo.forzado-atenuado{opacity:.5;filter:grayscale(.55)}
 .racimo-badge{position:absolute;top:2px;right:2px;background:var(--fg-strong);color:var(--bg);
   font-size:.55rem;line-height:1;border-radius:999px;padding:2px 4px;font-family:var(--font-display);z-index:2}
 @keyframes brotar{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:scale(1)}}
@@ -179,6 +180,9 @@ img,svg{max-width:100%}
 .fl-nombre:hover{border-color:var(--line)}
 .fl-nombre:focus{border-color:var(--line-strong);background:var(--bg-soft)}
 .fila-item .btn{padding:4px 9px;font-size:.76rem}
+.fila-item .fl-check{display:flex;align-items:center;gap:4px;font-size:.72rem;color:var(--fg-soft);
+  white-space:nowrap;flex:0 0 auto}
+.fila-item .fl-check input:disabled{opacity:.4}
 
 /* ---------- selector de estilo (clic, no dropdown) ---------- */
 .estilos-grid{display:flex;flex-wrap:wrap;gap:8px}

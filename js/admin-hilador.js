@@ -6,6 +6,7 @@ import { dibujarNudo } from "./motifs.js";
 import { FORMULARIO_MESA_DEFECTO, PARES_MESA } from "./formularioMesaDefecto.js";
 import { suscribirEstilos, resolverEstiloCategoria } from "./estilos.js";
 import { registrar } from "./historial.js";
+import { debounce } from "./util.js";
 
 export function render(el, perfil) {
   var unsubs = [];
@@ -92,7 +93,7 @@ async function abrirFormularioMesa(el, proyecto, formulario, pasadaId, perfil) {
 
   el.innerHTML =
     '<div class="notice">Estás llenando <strong>' + (pasada.nombre || pasadaId) + '</strong> del telar <strong>' + proyecto.nombre + '</strong>. ' +
-    'Se guarda mientras escribes — con solo título o solo descripción ya se ve en el telar.</div>' +
+    'Se guarda solo mientras haces una pausa al escribir — con solo título o solo descripción ya se ve en el telar.</div>' +
     '<div id="hi-preguntas" style="display:grid;gap:12px;grid-template-columns:1fr;margin-top:16px"></div>';
 
   function apariencia() { return { punto: "solido" }; }
@@ -140,7 +141,9 @@ async function abrirFormularioMesa(el, proyecto, formulario, pasadaId, perfil) {
     var registrarDebounce = null;
 
     // guarda en vivo, sin botón "Confirmar": alcanza con título O descripción, no hace falta llenar ambos.
-    function guardar() {
+    // el escrito a Firestore va debounced (600ms tras la última tecla) para no mandar un write por
+    // caracter con varios hiladores a la vez; .flush() en blur asegura que no se pierda el último tramo.
+    function guardarAhora() {
       var tituloVal = titulo.value.trim(), textoVal = texto.value.trim();
       var par = PARES_MESA[i];
       for (var c = 0; c < p.cols.length; c++) {
@@ -150,11 +153,11 @@ async function abrirFormularioMesa(el, proyecto, formulario, pasadaId, perfil) {
         // la apariencia (punto/tinte/matiz/giro/espejo) solo se fija al crear el nudo;
         // si ya existe, el hilador solo puede tocar el texto — la apariencia es del urdidor/tejedor.
         var datos = existente
-          ? { hiloId: hiloId, titulo: tituloVal, texto: textoVal, estado: "tejido" }
+          ? { hiloId: hiloId, titulo: tituloVal, texto: textoVal, estado: "tejido", pregunta: p.texto }
           : (function () {
               var estilo = nudoGeneradoPara(p.categoria);
               return {
-                hiloId: hiloId, titulo: tituloVal, texto: textoVal,
+                hiloId: hiloId, titulo: tituloVal, texto: textoVal, pregunta: p.texto,
                 punto: estilo.punto, tinte: estilo.tinte, matiz: estilo.matiz, giro: par.giro, espejo: par.espejo,
                 estado: "tejido", fuente: "directo", eco: false
               };
@@ -170,7 +173,11 @@ async function abrirFormularioMesa(el, proyecto, formulario, pasadaId, perfil) {
       }, 800);
     }
 
+    var guardar = debounce(guardarAhora, 600);
+
     titulo.addEventListener("input", guardar);
+    titulo.addEventListener("blur", function () { guardar.flush(); });
     texto.addEventListener("input", function () { cont.textContent = texto.value.length; guardar(); });
+    texto.addEventListener("blur", function () { guardar.flush(); });
   });
 }

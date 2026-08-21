@@ -8,6 +8,7 @@ import { dibujarNudo } from "./motifs.js";
 import { CATEGORIAS, suscribirEstilos, resolverEstiloCategoria } from "./estilos.js";
 import { FORMULARIO_MESA_DEFECTO, PARES_MESA } from "./formularioMesaDefecto.js";
 import { registrar } from "./historial.js";
+import { debounce } from "./util.js";
 
 export function render(el, perfil) {
   var unsubs = [];
@@ -71,6 +72,8 @@ export function renderContenido(el, perfil, unsubs) {
 
   el.innerHTML =
     '<div id="ct-selector" style="margin-bottom:14px"></div>' +
+    '<p style="margin-bottom:16px"><button class="btn" id="ct-exportar">Descargar respaldo (JSON) de este telar</button> ' +
+    '<span class="ghost" style="font-size:.78rem">Sirve para reconstruir el telar si la base de datos se pierde.</span></p>' +
     '<div class="card" style="max-width:520px;margin-bottom:16px">' +
       '<div class="pair" style="align-items:flex-end">' +
         '<div class="field"><label>Nombre de la nueva fila</label><input id="np-nombre" placeholder="Ej: Eje B"></div>' +
@@ -120,6 +123,49 @@ export function renderContenido(el, perfil, unsubs) {
     registrar(estado.proyecto.id, { tipo: "fila_creada", resumen: "Fila creada: " + nombre + " (" + tipo + ")", autor: perfil.email });
     el.querySelector("#np-nombre").value = "";
   });
+
+  el.querySelector("#ct-exportar").addEventListener("click", async function () {
+    if (!estado.proyecto) return;
+    var boton = this;
+    boton.disabled = true;
+    var textoOriginal = boton.textContent;
+    boton.textContent = "Preparando…";
+    try {
+      await exportarProyectoJSON(estado.proyecto);
+      registrar(estado.proyecto.id, { tipo: "proyecto_exportado", resumen: "Respaldo JSON descargado", autor: perfil.email });
+    } finally {
+      boton.disabled = false;
+      boton.textContent = textoOriginal;
+    }
+  });
+}
+
+/** respaldo completo de un telar (proyecto + estilos + pasadas + sus nudos) como un archivo .json descargable */
+async function exportarProyectoJSON(proyecto) {
+  var salida = { proyecto: Object.assign({ id: proyecto.id }, proyecto), estilos: [], pasadas: [], exportadoEn: new Date().toISOString() };
+
+  var estilosSnap = await getDocs(collection(db, "proyectos", proyecto.id, "estilos"));
+  estilosSnap.forEach(function (d) { salida.estilos.push(Object.assign({ id: d.id }, d.data())); });
+
+  var pasadasSnap = await getDocs(query(collection(db, "proyectos", proyecto.id, "pasadas"), orderBy("index")));
+  for (var i = 0; i < pasadasSnap.docs.length; i++) {
+    var pasadaDoc = pasadasSnap.docs[i];
+    var pasada = Object.assign({ id: pasadaDoc.id }, pasadaDoc.data());
+    var nudosSnap = await getDocs(collection(pasadaDoc.ref, "nudos"));
+    pasada.nudos = [];
+    nudosSnap.forEach(function (n) { pasada.nudos.push(Object.assign({ id: n.id }, n.data())); });
+    salida.pasadas.push(pasada);
+  }
+
+  var blob = new Blob([JSON.stringify(salida, null, 2)], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "telar-" + proyecto.id + "-" + new Date().toISOString().slice(0, 10) + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function cargarTelar(el, estado, perfil) {
@@ -146,6 +192,10 @@ function renderFilasLista(el, estado, perfil) {
       '<input type="checkbox" class="fl-activa" title="Activa (visible al público)"' + (p.activo !== false ? " checked" : "") + '>' +
       '<span class="tag">' + (p.tipo || "") + '</span>' +
       '<input class="fl-nombre" value="' + (p.nombre || "") + '">' +
+      '<label class="fl-check" title="Muestra el color/forma real de las celdas de esta fila aunque todavía no tengan contenido">' +
+        '<input type="checkbox" class="fl-forzar"' + (p.forzarColor ? " checked" : "") + '> Forzar color</label>' +
+      '<label class="fl-check" title="Las celdas sin contenido se ven con color pero atenuadas/desaturadas, no a todo color">' +
+        '<input type="checkbox" class="fl-atenuado"' + (p.atenuado !== false ? " checked" : "") + (p.forzarColor ? "" : " disabled") + '> Atenuado</label>' +
       '<button class="btn fl-subir" title="Subir"' + (i === 0 ? " disabled" : "") + '>↑</button>' +
       '<button class="btn fl-bajar" title="Bajar"' + (i === n - 1 ? " disabled" : "") + '>↓</button>' +
       '<button class="btn fl-borrar" title="Borrar fila">Borrar</button>' +
@@ -155,6 +205,7 @@ function renderFilasLista(el, estado, perfil) {
   Array.prototype.forEach.call(cont.querySelectorAll("[data-pasada]"), function (fila) {
     var id = fila.dataset.pasada;
     var ref = doc(db, "proyectos", estado.proyecto.id, "pasadas", id);
+    var p = estado.pasadas.filter(function (x) { return x.id === id; })[0] || {};
 
     fila.querySelector(".fl-activa").addEventListener("change", function (e) {
       setDoc(ref, { activo: e.target.checked }, { merge: true });
@@ -170,6 +221,22 @@ function renderFilasLista(el, estado, perfil) {
     }
     nombreInput.addEventListener("blur", guardarNombre);
     nombreInput.addEventListener("keydown", function (e) { if (e.key === "Enter") nombreInput.blur(); });
+
+    var forzarInput = fila.querySelector(".fl-forzar");
+    var atenuadoInput = fila.querySelector(".fl-atenuado");
+    forzarInput.addEventListener("change", function (e) {
+      var forzar = e.target.checked;
+      atenuadoInput.disabled = !forzar;
+      var datos = { forzarColor: forzar };
+      // al activar forzar por primera vez, "atenuado" arranca en true por defecto
+      if (forzar && p.atenuado === undefined) { datos.atenuado = true; atenuadoInput.checked = true; }
+      setDoc(ref, datos, { merge: true });
+      registrar(estado.proyecto.id, { tipo: "fila_forzar_color", resumen: (forzar ? "Forzar color activado: " : "Forzar color desactivado: ") + id, autor: perfil.email });
+    });
+    atenuadoInput.addEventListener("change", function (e) {
+      setDoc(ref, { atenuado: e.target.checked }, { merge: true });
+      registrar(estado.proyecto.id, { tipo: "fila_atenuado", resumen: (e.target.checked ? "Atenuado activado: " : "Atenuado desactivado: ") + id, autor: perfil.email });
+    });
 
     fila.querySelector(".fl-subir").addEventListener("click", function () { moverFila(estado, id, -1); });
     fila.querySelector(".fl-bajar").addEventListener("click", function () { moverFila(estado, id, 1); });
@@ -365,8 +432,13 @@ function abrirEditorUno(panel, el, estado, perfil, pasadaId, hiloId) {
     this.textContent = "Espejo: " + (espejo ? "sí" : "no");
     guardar({ espejo: espejo });
   });
+  // texto: guardado debounced (600ms de pausa) para no escribir a Firestore por cada tecla;
+  // flush en blur para no perder lo último tipeado si el urdidor/tejedor se va rápido a otro campo.
+  var guardarTextoDebounced = debounce(function () { guardar({}); }, 600);
   ["#e-titulo", "#e-texto", "#e-imagen", "#e-enlace"].forEach(function (sel) {
-    panel.querySelector(sel).addEventListener("input", function () { guardar({}); });
+    var input = panel.querySelector(sel);
+    input.addEventListener("input", guardarTextoDebounced);
+    input.addEventListener("blur", function () { guardarTextoDebounced.flush(); });
   });
   panel.querySelector("#e-estado").addEventListener("change", function () { guardar({}); });
   if (nudo) {
