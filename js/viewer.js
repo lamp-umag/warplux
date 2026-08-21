@@ -175,7 +175,6 @@ function mostrarPanel(nudo, pasada, hiloId, todos) {
     (nudo.texto ? '<p class="cita">“' + nudo.texto + '”</p>' : "") +
     (enlaceSeguro ? '<p><a href="' + enlaceSeguro + '" target="_blank" rel="noopener">Más información →</a></p>' : "") +
     '<div class="meta">' +
-    (nudo.fuente ? '<span class="tag">' + fuenteLabel(nudo.fuente) + "</span>" : "") +
     (nudo.eco ? '<span class="tag">Con audio</span>' : "") +
     "</div>";
   if (otros.length) {
@@ -191,9 +190,6 @@ function mostrarPanel(nudo, pasada, hiloId, todos) {
 function esUrlSegura(url) {
   if (!url) return null;
   return /^https:\/\//i.test(url) ? url : null;
-}
-function fuenteLabel(f) {
-  return { sembrado: "Contenido de base", directo: "Cargado en vivo", eco: "Desde estación de audio" }[f] || f;
 }
 
 function abrirHoja() {

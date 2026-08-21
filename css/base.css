@@ -159,7 +159,6 @@ img,svg{max-width:100%}
 .stage{display:grid;gap:22px;grid-template-columns:1fr;align-items:start;margin-top:6px}
 @media(min-width:980px){.stage{grid-template-columns:minmax(0,540px) minmax(0,1fr)}
   .stage > .panel{grid-column:2;grid-row:1}
-  .stage > .lado{grid-column:2;grid-row:2;align-self:start}
   .stage > .telar{grid-column:1;grid-row:1 / span 2}}
 
 /* ---------- paleta cerrada (swatches) ---------- */
