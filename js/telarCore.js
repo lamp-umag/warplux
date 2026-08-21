@@ -113,19 +113,40 @@ export function renderCuerpo(el, pasadas, nudosPorPasada, opts) {
   el.style.gap = (typeof apariencia.espacioNudos === "number" ? apariencia.espacioNudos : APARIENCIA_DEFECTO.espacioNudos) + "px";
   el.innerHTML = html;
 
-  if (opts.onNudoClick || opts.onNudoHover) {
-    Array.prototype.forEach.call(el.querySelectorAll("[data-pasada][data-hilo]"), function (btn) {
+  if (opts.onNudoClick || opts.onNudoHover || opts.resonarGemelos) {
+    var infoPorBoton = Array.prototype.map.call(el.querySelectorAll("[data-pasada][data-hilo]"), function (btn) {
       var pasadaId = btn.dataset.pasada, hiloId = btn.dataset.hilo;
       var pasada = pasadas.filter(function (p) { return p.id === pasadaId; })[0];
       var opciones = (pasada && pasada.forzarColor) ? Object.assign({}, opts, { soloConContenido: false }) : opts;
       var todos = filtrarNudos((agruparPorHilo(nudosPorPasada[pasadaId] || [])[hiloId] || []), opciones);
-      if (opts.onNudoClick) btn.addEventListener("click", function (e) { opts.onNudoClick(todos[0], pasada, hiloId, todos, btn, e); });
-      if (opts.onNudoHover) btn.addEventListener("mouseenter", function () { opts.onNudoHover(todos[0], pasada, hiloId, todos, btn); });
+      return { btn: btn, pasadaId: pasadaId, hiloId: hiloId, pasada: pasada, todos: todos };
+    });
+
+    infoPorBoton.forEach(function (info) {
+      // "gemelos": celdas de la MISMA fila que responden la misma pregunta (mesas 2x1 por pregunta,
+      // ver formularioMesaDefecto) — se detecta por contenido (pregunta compartida), no por columna fija,
+      // así funciona para cualquier armado de columnas.
+      var gemelos = [];
+      if (opts.resonarGemelos) {
+        var pregunta = info.todos[0] && info.todos[0].pregunta;
+        if (pregunta) {
+          gemelos = infoPorBoton.filter(function (o) {
+            return o !== info && o.pasadaId === info.pasadaId && o.todos[0] && o.todos[0].pregunta === pregunta;
+          }).map(function (o) { return o.btn; });
+        }
+      }
+      if (opts.onNudoClick) info.btn.addEventListener("click", function (e) { opts.onNudoClick(info.todos[0], info.pasada, info.hiloId, info.todos, info.btn, e, gemelos); });
+      if (opts.onNudoHover) info.btn.addEventListener("mouseenter", function () { opts.onNudoHover(info.todos[0], info.pasada, info.hiloId, info.todos, info.btn, gemelos); });
+      if (gemelos.length) {
+        info.btn.addEventListener("mouseenter", function () { gemelos.forEach(function (g) { g.classList.add("resonando"); }); });
+        info.btn.addEventListener("mouseleave", function () { gemelos.forEach(function (g) { g.classList.remove("resonando"); }); });
+      }
     });
   }
 }
 
+/** btn: un botón, un array de botones (ej. celda + sus gemelas), o null/vacío para solo limpiar */
 export function marcarActivo(el, btn) {
   Array.prototype.forEach.call(el.querySelectorAll(".nudo.activo"), function (c) { c.classList.remove("activo"); });
-  if (btn) btn.classList.add("activo");
+  (Array.isArray(btn) ? btn : (btn ? [btn] : [])).forEach(function (b) { b.classList.add("activo"); });
 }

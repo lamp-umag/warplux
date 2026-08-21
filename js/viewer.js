@@ -133,8 +133,9 @@ function renderTodo() {
     soloTejido: true,
     soloConContenido: true,
     esVisible: esVisible,
-    onNudoClick: function (nudo, pasada, hiloId, todos, btn) {
-      marcarActivo($("telar-cuerpo"), btn);
+    resonarGemelos: true, // en mesas 2x1, las dos celdas de una misma pregunta reaccionan juntas
+    onNudoClick: function (nudo, pasada, hiloId, todos, btn, e, gemelos) {
+      marcarActivo($("telar-cuerpo"), [btn].concat(gemelos || []));
       mostrarPanel(nudo, pasada, hiloId, todos);
       abrirHoja();
     },
@@ -209,24 +210,41 @@ document.addEventListener("keydown", function (e) {
   }
 });
 
-/* ---------------- vista hilos (lista) ---------------- */
+/* ---------------- vista hilos (lista): agrupada por pregunta/columna, no por fila/historia ---------------- */
 function renderHilosView(total) {
   $("hilos-conteo").textContent = total + " aporte" + (total === 1 ? "" : "s") + " tejidos en total";
-  var html = "";
-  estado.pasadas.forEach(function (pasada) {
-    var grupos = agruparPorHilo(estado.nudosPorPasada[pasada.id] || []);
-    Object.keys(grupos).forEach(function (hiloId) {
-      grupos[hiloId].filter(tieneContenido).forEach(function (n) {
-        var hilo = estado.hilos.filter(function (h) { return h.id === hiloId; })[0] || {};
-        html += '<div class="card" style="border-left:4px solid ' + (n.tinte || "#ccc") + '">' +
-          (n.pregunta ? '<p class="ghost" style="font-style:italic;font-size:.8rem;margin:0 0 6px">' + n.pregunta + '</p>' : "") +
-          '<p class="cita" style="margin:0 0 8px">“' + (n.texto || n.titulo) + '”</p>' +
-          '<div class="meta">' +
-          '<span class="tag">' + (pasada.nombre || pasada.etiquetaCorta) + "</span>" +
-          (hilo.nombre ? '<span class="tag">' + hilo.nombre + "</span>" : "") +
-          "</div></div>";
+  var hilosContenido = estado.hilos.filter(function (h) { return h.tipo === "contenido"; });
+
+  // dos columnas gemelas (ej c1/c2) responden la MISMA pregunta con el MISMO contenido, a propósito
+  // (formularioMesaDefecto). Agrupamos por texto de pregunta (no por columna cruda) y nos quedamos con
+  // una sola tarjeta por mesa por pregunta, para no mostrar la misma respuesta duplicada dos veces.
+  var grupos = {}, orden = [];
+  hilosContenido.forEach(function (hilo) {
+    estado.pasadas.forEach(function (pasada) {
+      var lista = (agruparPorHilo(estado.nudosPorPasada[pasada.id] || [])[hilo.id] || []).filter(tieneContenido);
+      lista.forEach(function (n) {
+        var clave = n.pregunta || (hilo.nombre || hilo.id);
+        if (!grupos[clave]) { grupos[clave] = { titulo: n.pregunta || hilo.nombre || hilo.id, vistos: {}, entradas: [] }; orden.push(clave); }
+        var g = grupos[clave];
+        if (g.vistos[pasada.id]) return; // ya se agregó esta fila para esta pregunta (nudos gemelos)
+        g.vistos[pasada.id] = true;
+        g.entradas.push({ nudo: n, pasada: pasada });
       });
     });
+  });
+
+  var html = "";
+  orden.forEach(function (clave) {
+    var g = grupos[clave];
+    html += '<div style="margin-bottom:22px">' +
+      '<h3 style="font-size:.78rem;letter-spacing:.02em;margin-bottom:10px">' + g.titulo + '</h3>';
+    g.entradas.forEach(function (e) {
+      html += '<div class="card" style="border-left:4px solid ' + (e.nudo.tinte || "#ccc") + '">' +
+        '<p class="cita" style="margin:0 0 8px">“' + (e.nudo.texto || e.nudo.titulo) + '”</p>' +
+        '<div class="meta"><span class="tag">' + (e.pasada.nombre || e.pasada.etiquetaCorta) + '</span></div>' +
+        '</div>';
+    });
+    html += '</div>';
   });
   $("lista-hilos").innerHTML = html || '<p class="estado-vacio">Todavía no hay nada tejido.</p>';
 }

@@ -125,6 +125,7 @@ img,svg{max-width:100%}
 .nudo.vacio:hover{transform:none}
 .nudo.atenuado{opacity:.28;filter:grayscale(.4)}
 .nudo.forzado-atenuado{opacity:.5;filter:grayscale(.55)}
+.nudo.resonando{transform:scale(1.08);z-index:3}
 .racimo-badge{position:absolute;top:2px;right:2px;background:var(--fg-strong);color:var(--bg);
   font-size:.55rem;line-height:1;border-radius:999px;padding:2px 4px;font-family:var(--font-display);z-index:2}
 @keyframes brotar{from{opacity:0;transform:scale(.55)}to{opacity:1;transform:scale(1)}}
